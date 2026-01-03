@@ -164,6 +164,9 @@ EOF
 setup_environment() {
     log "=== Konfiguracja środowiska 24/7 ==="
     
+    log "Pobieranie najnowszych zmian z repozytorium..."
+    cd "$WORKFLOW_DIR" && git pull origin master
+    
     mkdir -p "$WORKFLOW_DIR"/{data,scripts,logs,tmp}
     
     # Termux-services dla niezawodności
