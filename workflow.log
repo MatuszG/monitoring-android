@@ -1,0 +1,12 @@
+[0;32m[2025-11-28 13:27:11][0m Sprawdzanie zależności...
+[0;32m[2025-11-28 13:27:11][0m Instalacja cronie (cron dla Termux)...
+[0;32m[2025-11-28 13:27:12][0m Python nie zainstalowany - pomiń lub zainstaluj: pkg install python
+[0;32m[2025-11-28 13:27:12][0m Konfiguracja auto-reset (cron)...
+[0;32m[2025-11-28 13:27:13][0m Uruchomiono crond
+[0;32m[2025-11-28 13:27:13][0m Cron skonfigurowany: workflow co 5 minut
+[0;32m[2025-11-28 13:27:13][0m Sprawdź: crontab -l
+[0;32m[2025-11-28 13:27:13][0m Setup zakończony! Workflow będzie działać automatycznie.
+[0;32m[2025-11-28 13:28:34][0m === Start workflow ===
+[0;32m[2025-11-28 13:28:34][0m Pamięć: 3.7Gi/5.5Gi
+[0;32m[2025-11-28 13:28:34][0m CPU: u0_a434%
+[0;32m[2025-11-28 13:28:34][0m === Workflow zakończony ===

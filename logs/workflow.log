@@ -1,0 +1,58 @@
+[0;32m[2025-11-28 13:35:43][0m === Konfiguracja powiadomień Telegram ===
+[0;32m[2025-11-28 13:37:16][0m Wysyłam test powiadomienia...
+[0;32m[2025-11-28 13:37:19][0m ✓ Powiadomienie testowe wysłane!
+[0;32m[2025-11-28 14:09:15][0m === Uruchamianie watchdog ===
+[1;33m[2025-11-28 14:09:16] WARN:[0m Workflow nie działa - restart (1)...
+[0;32m[2025-11-28 14:09:21][0m === Workflow 24/7 uruchomiony (PID: 11165) ===
+[0;32m[2025-11-28 14:09:21][0m --- Cykl #1 ---
+[0;32m[2025-11-28 14:09:22][0m Pamięć: 66.4% | Uptime: up 1 day, 23 hours, 13 minutes
+[0;32m[2025-11-28 14:10:00][0m Wysyłam logi na Telegram...
+[0;32m[2025-11-28 14:10:21][0m Test powiadomienia Telegram...
+[0;32m[2025-11-28 14:10:22][0m --- Cykl #2 ---
+[0;32m[2025-11-28 14:10:22][0m Pamięć: 66.7% | Uptime: up 1 day, 23 hours, 14 minutes
+[0;32m[2025-11-28 14:11:19][0m === Konfiguracja powiadomień Telegram ===
+[0;32m[2025-11-28 14:11:19][0m Znaleziono istniejącą konfigurację
+[0;32m[2025-11-28 14:11:22][0m --- Cykl #3 ---
+[0;32m[2025-11-28 14:11:22][0m Pamięć: 70.0% | Uptime: up 1 day, 23 hours, 15 minutes
+[0;32m[2025-11-28 14:12:22][0m --- Cykl #4 ---
+[0;32m[2025-11-28 14:12:22][0m Pamięć: 70.2% | Uptime: up 1 day, 23 hours, 16 minutes
+[0;32m[2025-11-28 14:13:22][0m --- Cykl #5 ---
+[0;32m[2025-11-28 14:13:22][0m Pamięć: 71.3% | Uptime: up 1 day, 23 hours, 17 minutes
+[0;32m[2025-11-28 14:13:46][0m === Konfiguracja powiadomień Telegram ===
+[0;32m[2025-11-28 14:13:46][0m Znaleziono istniejącą konfigurację
+[0;32m[2025-11-28 14:13:56][0m Wysyłam test powiadomienia...
+[0;32m[2025-11-28 14:13:57][0m === Konfiguracja powiadomień Telegram ===
+[0;32m[2025-11-28 14:13:57][0m Znaleziono istniejącą konfigurację
+[0;32m[2025-11-28 14:14:01][0m === Konfiguracja powiadomień Telegram ===
+[0;32m[2025-11-28 14:14:01][0m Znaleziono istniejącą konfigurację
+[0;32m[2025-11-28 14:14:06][0m Wysyłam test powiadomienia...
+[0;32m[2025-11-28 14:14:08][0m === Konfiguracja powiadomień Telegram ===
+[0;32m[2025-11-28 14:14:08][0m Znaleziono istniejącą konfigurację
+[0;32m[2025-11-28 14:14:23][0m --- Cykl #6 ---
+[0;32m[2025-11-28 14:14:23][0m Pamięć: 72.2% | Uptime: up 1 day, 23 hours, 18 minutes
+[0;32m[2025-11-28 14:14:33][0m Wysyłam test powiadomienia...
+[0;32m[2025-11-28 14:14:34][0m ✓ Powiadomienie testowe wysłane!
+[1;33m[2025-11-28 14:14:48] WARN:[0m Workflow już działa (PID: 11165)
+[0;32m[2025-11-28 14:15:09][0m Zatrzymywanie workflow...
+[0;32m[2025-11-28 14:15:11][0m Workflow zatrzymany
+[0;32m[2025-11-28 14:15:15][0m Uruchamianie daemona...
+[0;32m[2025-11-28 14:15:15][0m === Workflow 24/7 uruchomiony (PID: 20048) ===
+[0;32m[2025-11-28 14:15:15][0m === Workflow 24/7 uruchomiony (PID: 20048) ===
+[0;32m[2025-11-28 14:15:15][0m --- Cykl #1 ---
+[0;32m[2025-11-28 14:15:15][0m --- Cykl #1 ---
+[0;32m[2025-11-28 14:15:15][0m Pamięć: 67.4% | Uptime: up 1 day, 23 hours, 19 minutes
+[0;32m[2025-11-28 14:15:15][0m Pamięć: 67.4% | Uptime: up 1 day, 23 hours, 19 minutes
+[0;32m[2025-11-28 14:15:17][0m Daemon uruchomiony (PID: 20048)
+[0;32m[2025-11-28 14:15:48][0m Wysyłam logi na Telegram...
+[0;32m[2025-11-28 14:16:16][0m --- Cykl #2 ---
+[0;32m[2025-11-28 14:16:16][0m --- Cykl #2 ---
+[0;32m[2025-11-28 14:16:16][0m Pamięć: 68.7% | Uptime: up 1 day, 23 hours, 20 minutes
+[0;32m[2025-11-28 14:16:16][0m Pamięć: 68.7% | Uptime: up 1 day, 23 hours, 20 minutes
+[0;32m[2025-11-28 14:16:19][0m Zatrzymywanie workflow...
+[0;32m[2025-11-28 14:16:21][0m Workflow zatrzymany
+[1;33m[2025-11-28 14:16:27] WARN:[0m Workflow nie działa - restart (1)...
+[0;32m[2025-11-28 14:16:32][0m === Workflow 24/7 uruchomiony (PID: 22382) ===
+[0;32m[2025-11-28 14:16:33][0m --- Cykl #1 ---
+[0;32m[2025-11-28 14:16:33][0m Pamięć: 65.3% | Uptime: up 1 day, 23 hours, 21 minutes
+[0;32m[2025-11-28 14:17:33][0m --- Cykl #2 ---
+[0;32m[2025-11-28 14:17:33][0m Pamięć: 70.1% | Uptime: up 1 day, 23 hours, 22 minutes
