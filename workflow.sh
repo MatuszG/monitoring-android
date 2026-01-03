@@ -2,7 +2,7 @@
 # Termux 24/7 Auto-Restart Workflow
 # Wersja: 1.1 - Z powiadomieniami Telegram
 
-WORKFLOW_DIR="$HOME/workflow"
+WORKFLOW_DIR="$(dirname "$(realpath "$0")")"
 LOG_FILE="$WORKFLOW_DIR/logs/workflow.log"
 ERROR_LOG="$WORKFLOW_DIR/logs/error.log"
 PID_FILE="$WORKFLOW_DIR/workflow.pid"
