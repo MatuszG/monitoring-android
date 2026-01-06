@@ -230,22 +230,19 @@ read_all_temperatures() {
     local temps=()
     
     for zone in "${zones[@]}"; do
-        local temp_file="$zone/temp"
-        if [[ -f "$temp_file" ]]; then
-            local temp
-            temp=$(tr -cd '0-9' < "$temp_file")
+        temp_file="$zone/temp"
 
-            [[ -z "$temp" ]] && continue
+        [[ -r "$temp_file" ]] || continue
 
-            # Convert m°C to °C
-            if (( temp > 100 )); then
-                temp=$((temp / 1000))
-            fi
+        temp=$(cat "$temp_file" 2>/dev/null)
+        temp=${temp//$'\n'/}
 
-            local zone_name
-            zone_name=$(basename "$zone")
-            temps+=("$zone_name:${temp}°C")
-        fi
+        [[ "$temp" =~ ^[0-9]+$ ]] || continue
+
+        (( temp > 100 )) && temp=$((temp / 1000))
+
+        zone_name=$(basename "$zone")
+        temps+=("$zone_name:${temp}°C")
     done
     
     printf '%s ' "${temps[@]}"
