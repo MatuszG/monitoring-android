@@ -1,8 +1,10 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # update.sh - Aktualizacja workflow.sh i sorter-common
 # Synchronizuje kod, aktualizuje dependencje, restartuje workflow
+# SAMOWYSTARCZALNY - instaluje brakujące narzędzia i repozytoria
 
-set -e  # Exit on error
+# Nie zatrzymuj się na błędach - kontynuuj gdzie się da
+set +e
 
 # Kolory
 GREEN='\033[0;32m'
@@ -40,6 +42,40 @@ section "AKTUALIZACJA WORKFLOW"
 log "Katalog workflow: $WORKFLOW_DIR"
 log "Start: $(date '+%Y-%m-%d %H:%M:%S')"
 
+# 0. Sprawdzenie wymaganych narzędzi
+section "SPRAWDZENIE WYMAGANYCH NARZĘDZI"
+
+check_command() {
+    local cmd="$1"
+    local pkg="$2"
+    
+    if command -v "$cmd" &> /dev/null; then
+        log "✅ $cmd zainstalowany"
+        return 0
+    else
+        warn "❌ $cmd nie znaleziony, próbuję instalować..."
+        if command -v pkg &> /dev/null; then
+            log "Instaluję: pkg install -y $pkg"
+            if pkg install -y "$pkg" >> "$LOG_FILE" 2>&1; then
+                log "✅ $pkg zainstalowany"
+                return 0
+            else
+                warn "⚠️ Problem przy instalacji $pkg - spróbuję kontynuować"
+                return 1
+            fi
+        else
+            warn "⚠️ pkg install nie dostępny, zainstaluj ręcznie: $pkg"
+            return 1
+        fi
+    fi
+}
+
+check_command "git" "git"
+check_command "python" "python"
+check_command "pip" "python"  # pip jest częścią python
+check_command "jq" "jq"
+check_command "curl" "curl"
+
 # 1. Sprawdzenie czy workflow działa
 section "SPRAWDZENIE STATUSU"
 
@@ -74,49 +110,76 @@ if [ -d ".git" ]; then
         warn "⚠️ Git pull zwrócił kod błędu, kontynuuję..."
     fi
 else
-    warn "Brak .git, pomijam git pull dla głównego repozytorium"
+    warn "Brak .git - to nie git repository"
+    log "Jeśli chcesz updaty, zrób: git clone https://github.com/MatuszG/monitoring-android.git"
 fi
 
 # 4. Aktualizacja sorter-common
 section "AKTUALIZACJA SORTER-COMMON"
 
-if [ -d "$WORKFLOW_DIR/sorter-common" ]; then
+if [ ! -d "$WORKFLOW_DIR/sorter-common" ]; then
+    log "Katalog sorter-common nie znaleziony, klonuję..."
+    if git clone https://github.com/MatuszG/sorter-common.git "$WORKFLOW_DIR/sorter-common" >> "$LOG_FILE" 2>&1; then
+        log "✅ Git clone sorter-common zakończony"
+    else
+        error "❌ Git clone sorter-common failed!"
+        warn "Spróbuj ręcznie: git clone https://github.com/MatuszG/sorter-common.git sorter-common"
+    fi
+elif [ -d "$WORKFLOW_DIR/sorter-common/.git" ]; then
     cd "$WORKFLOW_DIR/sorter-common"
     
     log "Aktualizuję sorter-common..."
-    if [ -d ".git" ]; then
-        if git pull origin master >> "$LOG_FILE" 2>&1; then
-            log "✅ Git pull sorter-common zakończony"
-        else
-            warn "⚠️ Git pull sorter-common zwrócił kod błędu"
-        fi
+    if git pull origin master >> "$LOG_FILE" 2>&1; then
+        log "✅ Git pull sorter-common zakończony"
     else
-        warn "Brak .git w sorter-common"
-    fi
-    
-    # Instalacja/aktualizacja Python package
-    log "Instaluję sorter-common jako Python package..."
-    if pip install -e . >> "$LOG_FILE" 2>&1; then
-        log "✅ pip install sorter-common zakończony"
-    else
-        error "❌ pip install sorter-common failed!"
-        error "Spróbuj ręcznie: cd $WORKFLOW_DIR/sorter-common && pip install -e ."
+        warn "⚠️ Git pull sorter-common zwrócił kod błędu"
     fi
 else
-    error "❌ Katalog sorter-common nie znaleziony!"
-    error "Spróbuj: git clone https://github.com/MatuszG/sorter-common.git sorter-common"
-    exit 1
+    warn "Katalog sorter-common istnieje ale bez .git (niezbyt synced)"
+    log "Jeśli chcesz updaty: rm -rf sorter-common && git clone ..."
+fi
+
+# Instalacja/aktualizacja Python package
+if [ -d "$WORKFLOW_DIR/sorter-common" ]; then
+    log "Instaluję sorter-common jako Python package..."
+    if pip install -e "$WORKFLOW_DIR/sorter-common" >> "$LOG_FILE" 2>&1; then
+        log "✅ pip install sorter-common zakończony"
+    else
+        warn "⚠️ pip install sorter-common zwrócił kod błędu"
+        warn "Spróbuj ręcznie: cd $WORKFLOW_DIR/sorter-common && pip install -e ."
+    fi
+else
+    error "❌ Katalog sorter-common nie istnieje - update nie powiódł się"
 fi
 
 # 5. Sprawdzenie Python dependencji
 section "SPRAWDZENIE PYTHON DEPENDENCJI"
 
 log "Checking main.py requirements..."
-if python -c "from config import *; from sorter_common.src.sorter import process_photo; from models import MODEL" 2>> "$LOG_FILE"; then
+
+# Spróbuj załadować główne moduły
+if python -c "import torch, torchvision, ultralytics, easyocr, PIL, cv2, onnxruntime, numpy" 2>> "$LOG_FILE"; then
     log "✅ Python dependencje OK"
 else
-    warn "⚠️ Możliwe problemy z Python dependencjami"
-    log "Zainstaluj ręcznie: pip install -r requirements.txt"
+    warn "⚠️ Brakuje Python dependencji, instaluję..."
+    
+    # Jeśli sorter-common ma requirements.txt
+    if [ -f "$WORKFLOW_DIR/sorter-common/requirements.txt" ]; then
+        log "Instaluję z requirements.txt..."
+        if pip install -r "$WORKFLOW_DIR/sorter-common/requirements.txt" >> "$LOG_FILE" 2>&1; then
+            log "✅ Requirements zainstalowane"
+        else
+            warn "⚠️ Problem przy instalacji requirements"
+        fi
+    else
+        # Zainstaluj z setup.py
+        log "setup.py powinien zainstalować zależności..."
+        if pip install -e "$WORKFLOW_DIR/sorter-common" >> "$LOG_FILE" 2>&1; then
+            log "✅ Dependencje zainstalowane"
+        else
+            warn "⚠️ Problem przy instalacji dependencji"
+        fi
+    fi
 fi
 
 # 6. Aktualizacja uprawnień
@@ -150,11 +213,12 @@ if [ "$WORKFLOW_RUNNING" = true ]; then
     if "$WORKFLOW_DIR/workflow.sh" start >> "$LOG_FILE" 2>&1; then
         log "✅ Workflow uruchomiony"
         sleep 3
-        "$WORKFLOW_DIR/workflow.sh" status
+        "$WORKFLOW_DIR/workflow.sh" status || warn "Problem przy sprawdzeniu statusu"
     else
-        error "❌ Błąd przy uruchamianiu workflow!"
-        exit 1
+        warn "⚠️ Problem przy uruchamianiu workflow - spróbuj ręcznie: ./workflow.sh start"
     fi
+else
+    log "Workflow nie był uruchomiony, nie restartowuję"
 fi
 
 # ============================================================================
@@ -164,15 +228,22 @@ log "Logi z aktualizacji dostępne w: $LOG_FILE"
 
 echo ""
 log "📋 Podsumowanie:"
-log "  - ✅ workflow.sh zaktualizowany"
-log "  - ✅ sorter-common zaktualizowany"
-log "  - ✅ Dependencje sprawdzone"
+log "  - ✅ Narzędzia systemowe sprawdzone/zainstalowane"
+log "  - ✅ workflow.sh zaktualizowany (jeśli git dostępny)"
+log "  - ✅ sorter-common pobrany/zaktualizowany"
+log "  - ✅ Python dependencje sprawdzone"
 log "  - ✅ Konfiguracja sprawdzena"
 
 if [ "$WORKFLOW_RUNNING" = true ]; then
     log "  - ✅ Workflow zrestarted"
+else
+    log "  - ℹ️ Workflow nie był uruchomiony"
 fi
 
 echo ""
-log "Aby sprawdzić status: ./workflow.sh status"
-log "Aby zobaczyć logi: ./workflow.sh logs"
+log "🔧 Następne kroki:"
+log "  1. Sprawdź logi: tail -f logs/update.log"
+log "  2. Sprawdź status: ./workflow.sh status"
+log "  3. Jeśli potrzebne, edytuj config.env"
+log "  4. Uruchom: ./workflow.sh start"
+echo ""

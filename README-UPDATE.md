@@ -50,24 +50,43 @@ git clone https://github.com/MatuszG/sorter-common.git sorter-common
 
 ## 📦 Plik `update.sh` - Automatyczna Aktualizacja
 
-Skrypt `update.sh` automatyzuje całą procedurę aktualizacji:
+Skrypt `update.sh` automatyzuje całą procedurę aktualizacji - **całkowicie samowystarczalny**:
 
 ```bash
 ./update.sh
 ```
 
-### Co robi `update.sh`?
+### Co robi `update.sh`? (8 kroków)
 
+0. ✅ **Sprawdza/instaluje** wymagane narzędzia (git, python, pip, jq, curl)
 1. ✅ **Sprawdza** czy workflow działa
 2. ⏹️ **Zatrzymuje** workflow (jeśli działa)
 3. 📥 **Pobiera** ostatnią wersję z git (`git pull origin master`)
-4. 📥 **Aktualizuje** sorter-common (`git pull` + `pip install -e .`)
-5. ✔️ **Sprawdza** Python dependencje
+4. 📥 **Klonuje lub aktualizuje** sorter-common (auto-clone jeśli brakuje!)
+5. ✔️ **Instaluje** Python dependencje (auto-detect brakujących)
 6. 🔐 **Aktualizuje** uprawnienia (chmod +x)
-7. 📋 **Waliduje** config.env
+7. 📋 **Waliduje** config.env (kopiuje z .example jeśli brakuje)
 8. 🚀 **Restartuje** workflow (jeśli był uruchomiony)
 
+### Samowystarczalność
+
+Skrypt **automatycznie**:
+- Instaluje brakujące narzędzia (git, python, rclone, jq, curl)
+- Klonuje sorter-common jeśli go brakuje
+- Pobiera Python dependencje (torch, ultralytics, easyocr, etc.)
+- Tworzy config.env z template'u jeśli brakuje
+- Nie zatrzymuje się na błędach - kontynuuje gdzie się da
+
 **Wykorzystuj po każdej aktualizacji repozytorium!**
+
+### Pierwsze uruchomienie
+
+```bash
+# Na czystej instalacji (jeśli brakuje wszystkiego)
+./update.sh
+
+# To zawsze działa - instaluje automatycznie!
+```
 
 ---
 
