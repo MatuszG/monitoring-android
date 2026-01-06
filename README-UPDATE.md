@@ -90,6 +90,117 @@ Skrypt **automatycznie**:
 
 ---
 
+## 🔄 Auto-Update - Automatyczne Aktualizacje co 24h
+
+Workflow **automatycznie aktualizuje się co 24 godziny** bez żadnego udziału użytkownika!
+
+### Jak działa?
+
+1. W każdym cyklu workflow'u sprawdza plik `.last_update`
+2. Jeśli minęło 24h od ostatniej aktualizacji → uruchamia `update.sh`
+3. Update działa w tle (nie blokuje main pipeline)
+4. Timeout: 10 minut (jeśli dłużej → kontynuuje)
+5. Po zakończeniu wysyła info na Telegram
+
+### Powiadomienia Telegram
+
+Auto-update wysyła powiadomienia:
+
+```
+🔄 Auto-update: Zaczynam aktualizację kodu
+   Ostatnia aktualizacja: 2026-01-03 12:00:00
+
+✅ Auto-update zakończony
+   Czas: 14:32:10
+   Następna aktualizacja: 2026-01-07 14:32:10
+```
+
+Jeśli są błędy → wysyła też log file na Telegram.
+
+### Plik kontrolny
+
+```bash
+$WORKFLOW_DIR/.last_update  # UNIX timestamp ostatniej aktualizacji
+```
+
+Możesz wymusić następną aktualizację:
+```bash
+rm .last_update              # Usunięcie → update przy następnym cyklu
+# lub
+echo 0 > .last_update        # Ustawienie na 0 → zawsze update
+```
+
+### Konfiguracja interwału
+
+Domyślnie: **24 godziny** (86400 sekund)
+
+Aby zmienić (edytuj `workflow.sh`):
+```bash
+local update_interval=86400  # Zmień tutaj (w sekundach)
+```
+
+Przykłady:
+- 12h: `43200`
+- 6h: `21600`
+- 1h: `3600`
+- 30m: `1800`
+
+---
+
+## 📡 Telegram Logging - Wszystko na Telegramie
+
+### Powiadomienia z workflow.sh
+
+Workflow wysyła na Telegram:
+
+```
+🚀 Workflow uruchomiony
+   PID: 12345
+   Czas: 2026-01-03 14:32:10
+
+✅ Auto-update zakończony
+   Następna aktualizacja: 2026-01-07 14:32:10
+
+❌ ERROR: Sync rclone failed
+   (wysyła też error.log)
+
+🔴 Workflow OFFLINE wykryty!
+   (watchdog - auto-restart)
+
+⏹️ Workflow zatrzymany ręcznie
+```
+
+### Powiadomienia z update.sh
+
+Update wysyła:
+
+```
+⚙️ Update script uruchomiony
+   Czas: 2026-01-03 14:32:10
+
+✅ Update complete!
+   ✅ Tools checked/installed
+   ✅ workflow.sh updated
+   ✅ sorter-common synced
+   ✅ Python deps verified
+   ✅ Config validated
+```
+
+Jeśli błędy → wysyła też cały log file.
+
+### Konfiguracja
+
+Wszystkie powiadomienia konfigurują się w `config.env`:
+
+```bash
+TELEGRAM_BOT_TOKEN="123456:ABCDEFGHijklmnop"
+TELEGRAM_CHAT_ID="987654321"
+```
+
+Bez konfiguracji → powiadomienia się nie wysyłają (ale workflow działa).
+
+---
+
 ## ⚙️ Struktura Kodu i Podziale Sekcji
 
 ### `workflow.sh` - Główny orchestrator
@@ -100,6 +211,9 @@ workflow.sh
 │   ├── setup_environment()      # Instalacja zależności (pkg, rclone, jq, etc.)
 │   ├── setup_telegram()         # Konfiguracja powiadomień Telegram
 │   └── setup_autostart()        # Auto-start przy boot
+│
+├── AUTO-UPDATE (co 24h)
+│   └── check_and_run_auto_update()  # Uruchamia update.sh co 24h
 │
 ├── MAIN PIPELINE (execute_tasks)
 │   ├── sync_rclone()            # Pobranie zdjęć z Google Drive
@@ -127,6 +241,31 @@ workflow.sh
     ├── acquire_lock()           # Mutex dla parallel safety
     ├── release_lock()           # Unlock
     └── save_state()             # JSON state file
+```
+
+### `update.sh` - Autonomiczne aktualizacje
+
+```
+update.sh
+├── NARZĘDZIA (krok 0)
+│   └── check_command()          # Auto-install git, python, pip, jq, curl
+│
+├── GIT & REPOS (kroki 3-4)
+│   ├── git pull origin master   # Główny repo
+│   └── sorter-common (auto-clone jeśli brakuje)
+│
+├── PYTHON DEPS (krok 5)
+│   ├── Import check (torch, ultralytics, easyocr)
+│   ├── pip install -e sorter-common
+│   └── Auto-install brakujących
+│
+├── TELEGRAM
+│   ├── send_telegram()          # Powiadomienia tekstowe
+│   └── send_telegram_file()     # Wysyłanie logów
+│
+└── FINALIZACJA
+    ├── Restart workflow (jeśli był)
+    └── Telegram summary
 ```
 
 ---

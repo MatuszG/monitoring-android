@@ -309,11 +309,76 @@ Kolejna próba za ${RESTART_DELAY}s"
     done
 }
 
+# ============================================================================
+# AUTO-UPDATE - Uruchamianie update.sh co 24h
+# ============================================================================
+
+check_and_run_auto_update() {
+    local last_update_file="$WORKFLOW_DIR/.last_update"
+    local update_interval=86400  # 24 godziny w sekundach
+    local current_time=$(date +%s)
+    
+    # Sprawdzenie czy plik ostatniej aktualizacji istnieje
+    if [ ! -f "$last_update_file" ]; then
+        log "Pierwsza aktualizacja - tworzę marker..."
+        echo "$current_time" > "$last_update_file"
+        return 0
+    fi
+    
+    # Pobierz czas ostatniej aktualizacji
+    local last_update=$(cat "$last_update_file")
+    local time_since_update=$((current_time - last_update))
+    
+    # Sprawdzenie czy minęło 24h
+    if [ $time_since_update -ge $update_interval ]; then
+        log "Minęło 24h od ostatniej aktualizacji - uruchamiam update.sh"
+        send_telegram "🔄 Auto-update: Zaczynam aktualizację kodu
+Ostatnia aktualizacja: $(date -d @$last_update '+%Y-%m-%d %H:%M:%S')" true
+        
+        # Uruchom update.sh w tle (nie blokuj main pipeline)
+        if "$WORKFLOW_DIR/update.sh" >> "$LOG_FILE" 2>> "$ERROR_LOG" &
+            UPDATE_PID=$!
+            
+            # Czekaj max 10 minut na aktualizację
+            local timeout=600
+            local elapsed=0
+            while ps -p "$UPDATE_PID" > /dev/null 2>&1 && [ $elapsed -lt $timeout ]; do
+                sleep 10
+                elapsed=$((elapsed + 10))
+            done
+            
+            if ps -p "$UPDATE_PID" > /dev/null 2>&1; then
+                warn "Update.sh przekroczył timeout (10 minut), kontynuuję..."
+            fi
+            
+            # Zaktualizuj czas ostatniej aktualizacji
+            echo "$current_time" > "$last_update_file"
+            
+            # Wyślij info o completion
+            send_telegram "✅ Auto-update zakończony
+Czas: $(date '+%H:%M:%S')
+Następna aktualizacja: $(date -d '+24 hours' '+%Y-%m-%d %H:%M:%S')" true
+        then
+            log "✅ Auto-update uruchomiony pomyślnie"
+        else
+            error "Problem przy uruchamianiu update.sh"
+            send_telegram "❌ Auto-update failed!
+Sprawdź logi: ./workflow.sh logs" false
+        fi
+    else
+        local hours_until=$((($update_interval - $time_since_update) / 3600))
+        log "Następna aktualizacja za ~$hours_until godzin"
+    fi
+}
+
 # Wykonanie zadań
 execute_tasks() {
     local overall_status=0
     
     log "=== Rozpoczęcie cyklu przetwarzania ==="
+    
+    # 0. Sprawdzenie i uruchomienie auto-update co 24h
+    check_and_run_auto_update
     
     # 1. Sync z Google Drive / źródła
     if ! sync_rclone; then

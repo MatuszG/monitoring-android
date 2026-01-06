@@ -33,6 +33,65 @@ section() {
     echo -e "\n${BLUE}=== $1 ===${NC}\n" | tee -a "$LOG_FILE"
 }
 
+# Telegram - wysyłanie wiadomości
+send_telegram() {
+    local message="$1"
+    local silent="${2:-false}"
+    
+    # Załaduj config jeśli istnieje
+    if [ -f "$WORKFLOW_DIR/config.env" ]; then
+        source "$WORKFLOW_DIR/config.env"
+    fi
+    
+    # Sprawdzenie czy skonfigurowano
+    if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+        return 1
+    fi
+    
+    # Dodaj info o hoście
+    local device_info="📱 $(hostname 2>/dev/null || echo 'Termux')"
+    local full_message="${device_info}
+${message}"
+    
+    # Wyślij przez API
+    curl -s -X POST \
+        "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+        -d "chat_id=${TELEGRAM_CHAT_ID}" \
+        -d "text=${full_message}" \
+        -d "parse_mode=HTML" \
+        -d "disable_notification=${silent}" \
+        > /dev/null 2>&1
+    
+    return $?
+}
+
+# Telegram - wysyłanie pliku (logi)
+send_telegram_file() {
+    local file_path="$1"
+    local caption="${2:-Log file}"
+    
+    if [ -f "$WORKFLOW_DIR/config.env" ]; then
+        source "$WORKFLOW_DIR/config.env"
+    fi
+    
+    if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+        return 1
+    fi
+    
+    if [ ! -f "$file_path" ]; then
+        return 1
+    fi
+    
+    curl -s -X POST \
+        "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
+        -F "chat_id=${TELEGRAM_CHAT_ID}" \
+        -F "document=@${file_path}" \
+        -F "caption=${caption}" \
+        > /dev/null 2>&1
+    
+    return $?
+}
+
 # ============================================================================
 # GŁÓWNA PROCEDURA AKTUALIZACJI
 # ============================================================================
@@ -41,6 +100,10 @@ section "AKTUALIZACJA WORKFLOW"
 
 log "Katalog workflow: $WORKFLOW_DIR"
 log "Start: $(date '+%Y-%m-%d %H:%M:%S')"
+
+# Powiadomienie o starcie update.sh
+send_telegram "⚙️ Update script uruchomiony
+Czas: $(date '+%Y-%m-%d %H:%M:%S')" true
 
 # 0. Sprawdzenie wymaganych narzędzi
 section "SPRAWDZENIE WYMAGANYCH NARZĘDZI"
@@ -247,3 +310,30 @@ log "  2. Sprawdź status: ./workflow.sh status"
 log "  3. Jeśli potrzebne, edytuj config.env"
 log "  4. Uruchom: ./workflow.sh start"
 echo ""
+
+# Powiadomienie Telegram o completion
+SUMMARY="📋 Update Summary:
+✅ Tools checked/installed
+✅ workflow.sh updated
+✅ sorter-common synced
+✅ Python deps verified
+✅ Config validated"
+
+if [ "$WORKFLOW_RUNNING" = true ]; then
+    SUMMARY="$SUMMARY
+✅ Workflow restarted"
+else
+    SUMMARY="$SUMMARY
+ℹ️ Workflow was not running"
+fi
+
+send_telegram "✅ Update complete!
+$SUMMARY
+
+Duration: $(date '+%Y-%m-%d %H:%M:%S')" true
+
+# Wyślij ostatnie 50 linii logów jeśli byly błędy
+if grep -q "ERROR\|❌" "$LOG_FILE" 2>/dev/null; then
+    log "Wysyłam error log na Telegram..."
+    send_telegram_file "$LOG_FILE" "⚠️ Update logs (errors detected)"
+fi
