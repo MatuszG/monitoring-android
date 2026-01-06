@@ -267,6 +267,14 @@ setup_environment() {
     find "$SCRIPTS_DIR" -name "*.sh" -type f -exec chmod 755 {} \; 2>/dev/null
     log "✅ Permissions set (755: rwxr-xr-x)"
     
+    # Initialize thermal monitoring daemon
+    log "Starting thermal monitoring daemon..."
+    if bash "$SCRIPTS_DIR/thermal.sh" start; then
+        log "✓ Thermal daemon started"
+    else
+        warn "Thermal daemon failed to start - continuing without thermal monitoring"
+    fi
+    
     # Test connectivity
     log "Testing Telegram connectivity..."
     if test_telegram; then
@@ -316,6 +324,15 @@ Git:
   git-status         Show git status
   git-pull           Manual git pull
 
+Thermal Management (Independent Daemon):
+  thermal-start      Start thermal monitoring daemon
+  thermal-stop       Stop thermal monitoring daemon
+  thermal-restart    Restart thermal monitoring daemon
+  thermal-status     Show device temperature + status
+  thermal-logs       View temperature logs (default: last 50)
+  thermal-diags      Run thermal system diagnostics
+  emergency-cooldown Force emergency cooldown mode
+
 Pipeline:
   pipeline-dry-run   Test pipeline without changes
   check-deps         Check pipeline dependencies
@@ -329,7 +346,7 @@ Examples:
   $0 setup           # First time setup
   $0 start           # Start background daemon
   $0 logs            # Follow logs
-  $0 telegram-test   # Test notifications
+  $0 thermal-status  # Check device temperature
 
 EOF
 }
@@ -414,6 +431,34 @@ case "${1:-menu}" in
     
     git-pull)
         auto_git_pull
+        ;;
+    
+    thermal-start)
+        bash "$SCRIPTS_DIR/thermal.sh" start
+        ;;
+    
+    thermal-stop)
+        bash "$SCRIPTS_DIR/thermal.sh" stop
+        ;;
+    
+    thermal-restart)
+        bash "$SCRIPTS_DIR/thermal.sh" restart
+        ;;
+    
+    thermal-status)
+        bash "$SCRIPTS_DIR/thermal.sh" show-status
+        ;;
+    
+    thermal-logs)
+        bash "$SCRIPTS_DIR/thermal.sh" show-logs "${2:-50}"
+        ;;
+    
+    thermal-diags)
+        bash "$SCRIPTS_DIR/thermal.sh" diags
+        ;;
+    
+    emergency-cooldown)
+        bash "$SCRIPTS_DIR/thermal.sh" emergency-cooldown
         ;;
     
     pipeline-dry-run)

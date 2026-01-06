@@ -111,8 +111,23 @@ cleanup_temp_files() {
 execute_pipeline() {
     section "PIPELINE EXECUTION"
     
+    # Pre-pipeline thermal check
+    if ! check_thermal_before_pipeline; then
+        error "Pipeline aborted - thermal check failed"
+        return 1
+    fi
+    
     local start_time=$(date +%s)
     local steps_failed=0
+    
+    # Check if we should skip due to temperature
+    if should_skip_pipeline; then
+        warn "Pipeline skipped - device in cooldown mode or temperature critical"
+        return 1
+    fi
+    
+    # Reduce operations if temperature is HIGH
+    reduce_pipeline_operations
     
     # Step 1: Sync incoming photos
     if ! sync_rclone_incoming; then
@@ -136,6 +151,9 @@ execute_pipeline() {
     # Step 4: Cleanup
     cleanup_temp_files
     
+    # Post-pipeline thermal check
+    check_thermal_after_pipeline
+    
     # Calculate duration
     local end_time=$(date +%s)
     local duration=$((end_time - start_time))
@@ -143,6 +161,7 @@ execute_pipeline() {
     # Summary
     section "PIPELINE SUMMARY"
     log "Czas wykonania: ${duration}s"
+    log "Temperatura końcowa: $(read_temperature)°C"
     
     if [ $steps_failed -eq 0 ]; then
         log "✅ Pipeline zakończony pomyślnie"
