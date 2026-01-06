@@ -311,42 +311,189 @@ Kolejna próba za ${RESTART_DELAY}s"
 
 # Wykonanie zadań
 execute_tasks() {
-    # Hello World
-    echo "[$(date -Iseconds)] Hello from 24/7 workflow" >> "$WORKFLOW_DIR/data/output.txt"
+    local overall_status=0
     
-    # Status systemu
-    local mem_usage=$(free | grep Mem | awk '{printf "%.1f", $3/$2 * 100}')
-    local uptime=$(uptime -p 2>/dev/null || echo "N/A")
+    log "=== Rozpoczęcie cyklu przetwarzania ==="
     
-    log "Pamięć: ${mem_usage}% | Uptime: $uptime"
+    # 1. Sync z Google Drive / źródła
+    if ! sync_rclone; then
+        error "Błąd synchronizacji rclone"
+        overall_status=1
+    fi
     
-    # Placeholder dla przyszłych funkcji
-    # python_detection_task
-    # rclone_sync_task
+    # 2. Uruchomienie Python pipeline przetwarzania zdjęć
+    if ! run_photo_sorting; then
+        error "Błąd przetwarzania zdjęć"
+        overall_status=1
+    fi
     
-    # Cleanup starych plików (opcjonalnie)
+    # 3. Upload wyników z powrotem na Drive
+    if ! upload_results_rclone; then
+        error "Błąd uploadu wyników"
+        overall_status=1
+    fi
+    
+    # 4. Cleanup i maintenance
+    cleanup_tasks
+    
+    # 5. Status systemu
+    log "Status systemu: $(get_system_status)"
+    
+    log "=== Koniec cyklu ==="
+    return $overall_status
+}
+
+# Synchronizacja z Google Drive / rclone remote
+sync_rclone() {
+    local rclone_remote="${RCLONE_REMOTE:-gdrive}"
+    local incoming_dir="${INCOMING_DIR:-/mnt/incoming}"
+    
+    if ! command -v rclone &> /dev/null; then
+        warn "rclone nie zainstalowany, pomijam sync"
+        return 0
+    fi
+    
+    log "Synchronizacja z rclone ($rclone_remote)..."
+    
+    # Ustaw timeout i limity
+    if rclone sync \
+        "$rclone_remote:$RCLONE_ROOT/DriveSyncFiles" "$incoming_dir" \
+        --transfers=4 \
+        --checkers=8 \
+        --log-file="$LOG_FILE" \
+        --log-level=INFO \
+        --skip-links \
+        --timeout=60s \
+        2>> "$ERROR_LOG"; then
+        
+        log "✅ Sync rclone zakończony"
+        return 0
+    else
+        error "Sync rclone failed"
+        return 1
+    fi
+}
+
+# Uruchomienie Python pipeline sortowania zdjęć
+run_photo_sorting() {
+    log "Uruchamianie pipeline sortowania zdjęć..."
+    
+    # Sprawdzenie Python
+    if ! command -v python &> /dev/null; then
+        warn "Python nie zainstalowany, pomijam sorting"
+        return 0
+    fi
+    
+    # Zmień katalog na sorter-common aby imports działały
+    local sorter_dir="$WORKFLOW_DIR/sorter-common"
+    if [ ! -d "$sorter_dir" ]; then
+        error "Katalog sorter-common nie znaleziony: $sorter_dir"
+        return 1
+    fi
+    
+    # Uruchom main.py z odpowiednimi zmiennymi środowiskowymi
+    (
+        cd "$WORKFLOW_DIR"
+        
+        # Ustaw zmienne dla pipeline
+        export PYTHONUNBUFFERED=1
+        export DEBUG="0"  # "0"=produkcja, "1"=lokalny debug, "2"=10 zdjęć test
+        
+        # Jeśli istnieje .env, załaduj go
+        if [ -f "$WORKFLOW_DIR/.env" ]; then
+            source "$WORKFLOW_DIR/.env"
+        fi
+        
+        # Opcjonalnie załaduj config.env
+        if [ -f "$CONFIG_FILE" ]; then
+            source "$CONFIG_FILE"
+        fi
+        
+        if python main.py >> "$LOG_FILE" 2>> "$ERROR_LOG"; then
+            log "✅ Pipeline sortowania zakończony"
+            return 0
+        else
+            error "Pipeline sortowania failed"
+            return 1
+        fi
+    )
+    
+    return $?
+}
+
+# Upload wyników z powrotem na Google Drive
+upload_results_rclone() {
+    local rclone_remote="${RCLONE_REMOTE:-gdrive}"
+    local sorted_dir="${SORTED_DIR:-/mnt/sorted}"
+    local gdrive_path="${GDRIVE_PATH:-Posortowane}"
+    
+    if ! command -v rclone &> /dev/null; then
+        warn "rclone nie zainstalowany, pomijam upload"
+        return 0
+    fi
+    
+    log "Upload wyników do Google Drive..."
+    
+    if [ ! -d "$sorted_dir" ]; then
+        warn "Brak katalogu wyników: $sorted_dir"
+        return 0
+    fi
+    
+    # Sprawdź czy są pliki do uploadu
+    local file_count=$(find "$sorted_dir" -type f 2>/dev/null | wc -l)
+    if [ "$file_count" -eq 0 ]; then
+        log "Brak plików do uploadu (katalog pusty)"
+        return 0
+    fi
+    
+    log "Uploading $file_count files..."
+    
+    if rclone sync "$sorted_dir" "$rclone_remote:$RCLONE_ROOT/$gdrive_path" \
+        --transfers=4 \
+        --checkers=8 \
+        --log-file="$LOG_FILE" \
+        --log-level=INFO \
+        --timeout=120s \
+        2>> "$ERROR_LOG"; then
+        
+        log "✅ Upload wyników zakończony"
+        return 0
+    else
+        error "Upload rclone failed"
+        return 1
+    fi
+}
+
+# System cleanup i maintenance
+cleanup_tasks() {
+    log "Czyszczenie plików tymczasowych..."
+    
+    # Usuń stare pliki z tmp (starsze niż 7 dni)
     find "$WORKFLOW_DIR/tmp" -type f -mtime +7 -delete 2>/dev/null
     
+    # Usuń stare logi (starsze niż 30 dni)
+    find "$WORKFLOW_DIR/logs" -name "*.log.*" -mtime +30 -delete 2>/dev/null
+    
+    # Opcjonalnie: usuń pliki z to_delete
+    local to_delete_dir="${SORTED_DIR}/to_delete"
+    if [ -d "$to_delete_dir" ]; then
+        local delete_count=$(find "$to_delete_dir" -type f 2>/dev/null | wc -l)
+        if [ "$delete_count" -gt 0 ]; then
+            log "Usuwam $delete_count plików zaznaczonych do usunięcia..."
+            rm -rf "$to_delete_dir"/* 2>> "$ERROR_LOG"
+        fi
+    fi
+    
     return 0
 }
 
-# Funkcje do rozbudowy
-python_detection_task() {
-    if command -v python &> /dev/null; then
-        log "Uruchamianie detekcji..."
-        python "$WORKFLOW_DIR/scripts/detect.py" >> "$LOG_FILE" 2>> "$ERROR_LOG"
-        return $?
-    fi
-    return 0
-}
-
-rclone_sync_task() {
-    if command -v rclone &> /dev/null; then
-        log "Synchronizacja rclone..."
-        rclone sync "$WORKFLOW_DIR/data" remote:backup --log-file="$LOG_FILE"
-        return $?
-    fi
-    return 0
+# Pobranie statusu systemu
+get_system_status() {
+    local mem_usage=$(free | grep Mem | awk '{printf "%.1f", $3/$2 * 100}' 2>/dev/null || echo "N/A")
+    local uptime=$(uptime -p 2>/dev/null || echo "N/A")
+    local cpu_load=$(cat /proc/loadavg 2>/dev/null | awk '{print $1}' || echo "N/A")
+    
+    echo "💾 Mem: ${mem_usage}% | 🔄 Load: ${cpu_load} | ⏱️ Uptime: $uptime"
 }
 
 # Watchdog - monitoruje workflow i restartuje przy crash
