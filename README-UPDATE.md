@@ -100,22 +100,55 @@ Workflow **automatycznie aktualizuje się co 24 godziny** bez żadnego udziału 
 2. Jeśli minęło 24h od ostatniej aktualizacji → uruchamia `update.sh`
 3. Update działa w tle (nie blokuje main pipeline)
 4. Timeout: 10 minut (jeśli dłużej → kontynuuje)
-5. Po zakończeniu wysyła info na Telegram
+5. **Progress bar** wysyłany zawsze na Telegram (8 kroków, 0-100%)
+6. **Notyfikacje tekstowe** wysyłane tylko przy:
+   - 🔴 **Błędach** (z logami)
+   - 🟢 **Zmianach kodu** (git pull zwrócił zmiany, z logami)
+   - ⚪ **Normalnych updateach** → tylko progress bar (silent mode)
+
+### Etapy Aktualizacji (Progress Bar)
+
+```
+[0/8]  0%  🔍 Sprawdzenie narzędzi systemowych
+[1/8] 12%  ✔️ Narzędzia OK → 🔍 Sprawdzanie statusu workflow
+[2/8] 25%  ✔️ Status sprawdzony → ⏹️ Zatrzymywanie workflow
+[3/8] 37%  ✔️ Workflow zatrzymany → 📥 Aktualizacja workflow.sh
+[4/8] 50%  ✔️ workflow.sh aktualizowany → 📦 sorter-common synced
+[5/8] 62%  ✔️ Python deps checked → ✅ Requirements installed
+[6/8] 75%  ✔️ Permissions updated → 🔍 Validating config
+[7/8] 87%  ✔️ Config validated → 🚀 Finalizing
+[8/8] 100% ✅ Update complete!
+```
 
 ### Powiadomienia Telegram
 
-Auto-update wysyła powiadomienia:
+#### Zawsze wysyłane:
+- Progress bar (8 kroków)
 
+#### Tylko przy zmianach lub błędach:
+- ✅ Notyfikacja sukcesu (gdy zmiany)
+- 🔴 Notyfikacja błędu (gdy błędy)
+- 📝 Log file (gdy zmiany)
+- ⚠️ Log file (gdy błędy)
+
+#### Przykłady:
+
+**Zmiana kodu (git pull zwrócił różnice):**
 ```
-🔄 Auto-update: Zaczynam aktualizację kodu
-   Ostatnia aktualizacja: 2026-01-03 12:00:00
-
-✅ Auto-update zakończony
-   Czas: 14:32:10
-   Następna aktualizacja: 2026-01-07 14:32:10
+✅ Code updated successfully!
+📝 Update logs (Code changes applied)
 ```
 
-Jeśli są błędy → wysyła też log file na Telegram.
+**Błąd podczas update:**
+```
+❌ Update complete - ERRORS DETECTED!
+⚠️ Update errors detected (logi)
+```
+
+**Normalny update (brak zmian, brak błędów):**
+```
+[Tylko progress bar wysłany - silent mode]
+```
 
 ### Plik kontrolny
 

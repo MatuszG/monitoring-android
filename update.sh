@@ -92,6 +92,47 @@ send_telegram_file() {
     return $?
 }
 
+# Progress bar w Telegramie
+PROGRESS_MESSAGE_ID=""
+send_telegram_progress() {
+    local step="$1"
+    local percent="$2"
+    local message="$3"
+    
+    # Załaduj config jeśli istnieje
+    if [ -f "$WORKFLOW_DIR/config.env" ]; then
+        source "$WORKFLOW_DIR/config.env"
+    fi
+    
+    # Sprawdzenie czy skonfigurowano
+    if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+        return 1
+    fi
+    
+    # Build progress bar (20 znaków)
+    local filled=$(( (percent * 20) / 100 ))
+    local empty=$(( 20 - filled ))
+    local bar=$(printf '█%.0s' $(seq 1 $filled))$(printf '░%.0s' $(seq 1 $empty))
+    
+    local full_message="📱 $(hostname 2>/dev/null || echo 'Termux')
+
+⚙️ Update Progress: [$step]
+[$bar] $percent%
+
+$message"
+    
+    # Wyślij przez API
+    curl -s -X POST \
+        "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+        -d "chat_id=${TELEGRAM_CHAT_ID}" \
+        -d "text=${full_message}" \
+        -d "parse_mode=HTML" \
+        -d "disable_notification=true" \
+        > /dev/null 2>&1
+    
+    return $?
+}
+
 # ============================================================================
 # GŁÓWNA PROCEDURA AKTUALIZACJI
 # ============================================================================
@@ -101,12 +142,18 @@ section "AKTUALIZACJA WORKFLOW"
 log "Katalog workflow: $WORKFLOW_DIR"
 log "Start: $(date '+%Y-%m-%d %H:%M:%S')"
 
+# Flagi do śledzenia zmian i błędów
+HAS_CODE_CHANGES=false
+HAS_ERRORS=false
+
 # Powiadomienie o starcie update.sh
 send_telegram "⚙️ Update script uruchomiony
 Czas: $(date '+%Y-%m-%d %H:%M:%S')" true
 
 # 0. Sprawdzenie wymaganych narzędzi
 section "SPRAWDZENIE WYMAGANYCH NARZĘDZI"
+
+send_telegram_progress "0/8" "0" "🔍 Sprawdzenie narzędzi systemowych..."
 
 check_command() {
     local cmd="$1"
@@ -142,6 +189,9 @@ check_command "curl" "curl"
 # 1. Sprawdzenie czy workflow działa
 section "SPRAWDZENIE STATUSU"
 
+send_telegram_progress "1/8" "12" "✔️ Narzędzia OK
+🔍 Sprawdzanie statusu workflow..."
+
 WORKFLOW_RUNNING=false
 if [ -f "$WORKFLOW_DIR/workflow.pid" ]; then
     PID=$(cat "$WORKFLOW_DIR/workflow.pid")
@@ -159,6 +209,9 @@ if [ "$WORKFLOW_RUNNING" = true ]; then
     sleep 3
 fi
 
+send_telegram_progress "2/8" "25" "✔️ Status sprawdzony
+⏹️ Zatrzymywanie workflow..."
+
 # 3. Aktualizacja głównego repozytorium
 section "AKTUALIZACJA WORKFLOW.SH (GIT PULL)"
 
@@ -167,15 +220,27 @@ cd "$WORKFLOW_DIR"
 log "Sprawdzenie czy jest git repository..."
 if [ -d ".git" ]; then
     log "Aktualizuję workflow z git..."
-    if git pull origin master >> "$LOG_FILE" 2>&1; then
-        log "✅ Git pull zakończony"
+    # Sprawdzenie czy są zmiany
+    git fetch origin master >> "$LOG_FILE" 2>&1
+    if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/master)" ]; then
+        log "🔄 Wykryto zmiany w remote - pulling..."
+        HAS_CODE_CHANGES=true
+        if git pull origin master >> "$LOG_FILE" 2>&1; then
+            log "✅ Git pull zakończony - kod zaktualizowany!"
+        else
+            warn "⚠️ Git pull zwrócił kod błędu, kontynuuję..."
+            HAS_ERRORS=true
+        fi
     else
-        warn "⚠️ Git pull zwrócił kod błędu, kontynuuję..."
+        log "ℹ️ Kod jest aktualny (brak zmian)"
     fi
 else
     warn "Brak .git - to nie git repository"
     log "Jeśli chcesz updaty, zrób: git clone https://github.com/MatuszG/monitoring-android.git"
 fi
+
+send_telegram_progress "3/8" "37" "✔️ Workflow zatrzymany
+📥 Aktualizacja workflow.sh..."
 
 # 4. Aktualizacja sorter-common
 section "AKTUALIZACJA SORTER-COMMON"
@@ -215,6 +280,9 @@ else
     error "❌ Katalog sorter-common nie istnieje - update nie powiódł się"
 fi
 
+send_telegram_progress "4/8" "50" "✔️ workflow.sh aktualizowany
+📦 sorter-common synced..."
+
 # 5. Sprawdzenie Python dependencji
 section "SPRAWDZENIE PYTHON DEPENDENCJI"
 
@@ -245,12 +313,18 @@ else
     fi
 fi
 
+send_telegram_progress "5/8" "62" "✔️ Python deps checked
+✅ Requirements installed..."
+
 # 6. Aktualizacja uprawnień
 section "AKTUALIZACJA UPRAWNIEŃ"
 
 chmod +x "$WORKFLOW_DIR/workflow.sh" || warn "Problem przy zmiane uprawnień workflow.sh"
 chmod +x "$WORKFLOW_DIR/update.sh" || warn "Problem przy zmiane uprawnień update.sh"
 log "✅ Uprawnienia zaktualizowane"
+
+send_telegram_progress "6/8" "75" "✔️ Permissions updated
+🔍 Validating config..."
 
 # 7. Walidacja konfiguracji
 section "WALIDACJA KONFIGURACJI"
@@ -265,6 +339,9 @@ if [ ! -f "$WORKFLOW_DIR/config.env" ]; then
 else
     log "✅ config.env istnieje"
 fi
+
+send_telegram_progress "7/8" "87" "✔️ Config validated
+🚀 Finalizing..."
 
 # 8. Restart workflow (jeśli był uruchomiony)
 section "FINALIZACJA"
@@ -283,6 +360,8 @@ if [ "$WORKFLOW_RUNNING" = true ]; then
 else
     log "Workflow nie był uruchomiony, nie restartowuję"
 fi
+
+send_telegram_progress "8/8" "100" "✅ Update complete!"
 
 # ============================================================================
 section "AKTUALIZACJA ZAKOŃCZONA"
@@ -305,35 +384,50 @@ fi
 
 echo ""
 log "🔧 Następne kroki:"
-log "  1. Sprawdź logi: tail -f logs/update.log"
+log "  1. Sprawdź logi: ./workflow.sh update-logs"
 log "  2. Sprawdź status: ./workflow.sh status"
 log "  3. Jeśli potrzebne, edytuj config.env"
 log "  4. Uruchom: ./workflow.sh start"
 echo ""
 
-# Powiadomienie Telegram o completion
-SUMMARY="📋 Update Summary:
-✅ Tools checked/installed
-✅ workflow.sh updated
-✅ sorter-common synced
-✅ Python deps verified
-✅ Config validated"
+# ============================================================================
+# POWIADOMIENIA TELEGRAM - wg typu aktualizacji
+# ============================================================================
 
-if [ "$WORKFLOW_RUNNING" = true ]; then
-    SUMMARY="$SUMMARY
-✅ Workflow restarted"
-else
-    SUMMARY="$SUMMARY
-ℹ️ Workflow was not running"
+# Sprawdź czy były błędy
+if grep -q "ERROR\|❌" "$LOG_FILE" 2>/dev/null; then
+    HAS_ERRORS=true
 fi
 
-send_telegram "✅ Update complete!
-$SUMMARY
-
-Duration: $(date '+%Y-%m-%d %H:%M:%S')" true
-
-# Wyślij ostatnie 50 linii logów jeśli byly błędy
-if grep -q "ERROR\|❌" "$LOG_FILE" 2>/dev/null; then
-    log "Wysyłam error log na Telegram..."
-    send_telegram_file "$LOG_FILE" "⚠️ Update logs (errors detected)"
+# NOTYFIKACJA: Tylko przy błędach LUB zmianach kodu
+if [ "$HAS_ERRORS" = true ] || [ "$HAS_CODE_CHANGES" = true ]; then
+    
+    # Przygotuj wiadomość
+    if [ "$HAS_ERRORS" = true ]; then
+        MSG="🔴 Update complete - ERRORS DETECTED!"
+        ICON="❌"
+    elif [ "$HAS_CODE_CHANGES" = true ]; then
+        MSG="🟢 Code updated successfully!"
+        ICON="✅"
+    else
+        MSG="⚪ Update completed"
+        ICON="ℹ️"
+    fi
+    
+    # Wyślij notyfikację z logami
+    log "Wysyłam notyfikację na Telegram..."
+    send_telegram "$ICON $MSG" false
+    
+    # Wyślij logi jeśli błędy
+    if [ "$HAS_ERRORS" = true ]; then
+        send_telegram_file "$LOG_FILE" "⚠️ Update errors detected"
+    fi
+    
+    # Wyślij logi jeśli były zmiany
+    if [ "$HAS_CODE_CHANGES" = true ]; then
+        send_telegram_file "$LOG_FILE" "📝 Code changes applied"
+    fi
+else
+    # Brak błędów i zmian - tylko progress bar (już wysłany)
+    log "✅ Update completed - brak zmian ani błędów (silent mode)"
 fi

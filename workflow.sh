@@ -767,11 +767,24 @@ Status: ✅ Działa poprawnie"
         send_telegram_file "$ERROR_LOG" "⚠️ Error logs"
         ;;
     
+    update-logs)
+        if [ -f "$WORKFLOW_DIR/logs/update.log" ]; then
+            echo ""
+            echo "=== Ostatnie logi z update.sh ==="
+            echo ""
+            tail -n 50 "$WORKFLOW_DIR/logs/update.log"
+            echo ""
+            echo "Aby zobaczyć wszystkie: tail -f $WORKFLOW_DIR/logs/update.log"
+        else
+            echo "Nie ma logów update.sh (jeszcze nie było aktualizacji)"
+        fi
+        ;;
+    
     *)
         echo "Termux 24/7 Auto-Restart Workflow"
         echo "=================================="
         echo ""
-        echo "Użycie: $0 {setup|start|stop|restart|status|logs|watchdog|telegram-*}"
+        echo "Użycie: $0 {setup|start|stop|restart|status|logs|watchdog|telegram-*|update-logs}"
         echo ""
         echo "Podstawowe:"
         echo "  setup           - Pierwsza konfiguracja środowiska"
@@ -781,6 +794,9 @@ Status: ✅ Działa poprawnie"
         echo "  status          - Sprawdź status"
         echo "  logs            - Podgląd logów na żywo"
         echo "  watchdog        - Uruchom watchdog (auto-restart)"
+        echo ""
+        echo "Update & Maintenance:"
+        echo "  update-logs     - Pokaż ostatnie logi z aktualizacji"
         echo ""
         echo "Telegram:"
         echo "  telegram-test   - Test powiadomienia"
