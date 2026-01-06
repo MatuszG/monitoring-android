@@ -319,8 +319,14 @@ send_telegram_progress "5/8" "62" "✔️ Python deps checked
 # 6. Aktualizacja uprawnień
 section "AKTUALIZACJA UPRAWNIEŃ"
 
-chmod +x "$WORKFLOW_DIR/workflow.sh" || warn "Problem przy zmiane uprawnień workflow.sh"
-chmod +x "$WORKFLOW_DIR/update.sh" || warn "Problem przy zmiane uprawnień update.sh"
+chmod 755 "$WORKFLOW_DIR/workflow.sh" || warn "Problem przy zmiane uprawnień workflow.sh"
+chmod 755 "$WORKFLOW_DIR/update.sh" || warn "Problem przy zmiane uprawnień update.sh"
+
+# Auto-chmod dla wszystkich nowych .sh plików
+log "Ustawianie uprawnień dla wszystkich .sh plików (755)..."
+find "$WORKFLOW_DIR" -maxdepth 2 -name "*.sh" -type f -exec chmod 755 {} \; 2>/dev/null
+find "$WORKFLOW_DIR/scripts" -name "*.sh" -type f -exec chmod 755 {} \; 2>/dev/null
+
 log "✅ Uprawnienia zaktualizowane"
 
 send_telegram_progress "6/8" "75" "✔️ Permissions updated

@@ -48,8 +48,19 @@ send_telegram() {
     local message="$1"
     local silent="${2:-false}"  # false = z dźwiękiem, true = cicho
     
-    # Załaduj config jeśli istnieje
-    if [ -f "$CONFIG_FILE" ]; then
+    # Załaduj encryptedne sekrety jeśli istnieją
+    if [ -f "$SECRETS_FILE" ]; then
+        # Tymczasowe załadowanie bez promptu (dla automation)
+        local temp_pass="${MASTER_PASSWORD:-}"
+        if [ -n "$temp_pass" ]; then
+            local decrypted=$(openssl enc -aes-256-cbc -d -in "$SECRETS_FILE" \
+                -k "$temp_pass" 2>/dev/null)
+            eval "$decrypted"
+        fi
+    fi
+    
+    # Fallback na config.env jeśli sekrety nie działają
+    if [ -z "$TELEGRAM_BOT_TOKEN" ] && [ -f "$CONFIG_FILE" ]; then
         source "$CONFIG_FILE"
     fi
     
@@ -187,29 +198,206 @@ setup_environment() {
     # Konfiguracja Telegram
     setup_telegram
     
+    # Konfiguracja Git
+    setup_git_config
+    
     # Wyłącz battery optimization dla Termux (instrukcja)
     log ""
     log "WAŻNE: Wyłącz optymalizację baterii dla Termux:"
     log "1. Ustawienia -> Bateria -> Optymalizacja -> Termux -> Nie optymalizuj"
     log "2. Ustawienia -> Aplikacje -> Termux -> Bateria -> Bez ograniczeń"
     log ""
+    
+    # Auto-chmod dla wszystkich .sh plików
+    log "Ustawianie uprawnień dla skryptów (755)..."
+    find "$WORKFLOW_DIR" -maxdepth 2 -name "*.sh" -type f -exec chmod 755 {} \; 2>/dev/null
+    find "$WORKFLOW_DIR/scripts" -name "*.sh" -type f -exec chmod 755 {} \; 2>/dev/null
+    log "✅ Uprawnienia ustawione (755: rwxr-xr-x)"
+}
+
+# ============================================================================
+# ENCRYPTED SECRETS MANAGEMENT
+# ============================================================================
+# System szyfrowania wrażliwych danych (tokeny, hasła) przy użyciu openssl
+# Dane przechowywane w ~/.secrets/config.enc, odszyfrowywane po wpisaniu hasła
+
+SECRETS_DIR="$HOME/.secrets"
+SECRETS_FILE="$SECRETS_DIR/config.enc"
+SECRETS_HASH_FILE="$SECRETS_DIR/.hash"  # Sha256 hasła dla weryfikacji
+
+# Inicjalizacja systemu szyfrowania
+init_secrets() {
+    log "Inicjalizacja systemu szyfrowania..."
+    
+    if [ ! -d "$SECRETS_DIR" ]; then
+        mkdir -p "$SECRETS_DIR" || error "Nie mogę stworzyć $SECRETS_DIR"
+        chmod 700 "$SECRETS_DIR" || warn "Nie mogę zmienić uprawnień $SECRETS_DIR"
+        log "✅ Katalog $SECRETS_DIR utworzony"
+    fi
+    
+    # Jeśli plik już istnieje, nie reinicjalizuj
+    if [ -f "$SECRETS_FILE" ]; then
+        log "✓ Plik secrets już istnieje"
+        return 0
+    fi
+    
+    log ""
+    log "════════════════════════════════════════════════════════════"
+    log "KONFIGURACJA SZYFROWANYCH TAJEMNIC"
+    log "════════════════════════════════════════════════════════════"
+    log ""
+    
+    # Prompt dla hasła głównego
+    log "Ustaw GŁÓWNE HASŁO do szyfrowania danych (min 12 znaków)"
+    log "To hasło będzie wymagane podczas startu workflow"
+    log ""
+    read -sp "Wpisz hasło: " master_password
+    echo ""
+    read -sp "Powtórz hasło: " master_password_confirm
+    echo ""
+    
+    if [ "$master_password" != "$master_password_confirm" ]; then
+        error "Hasła się nie zgadzają!"
+        return 1
+    fi
+    
+    if [ ${#master_password} -lt 12 ]; then
+        error "Hasło musi mieć co najmniej 12 znaków!"
+        return 1
+    fi
+    
+    # Przygotuj plik z domyślnymi sekretami
+    cat > "$SECRETS_DIR/.config.txt" << 'EOF'
+# Wrażliwe dane - zostaną zaszyfrowane
+# Format: KLUCZ=WARTOŚĆ
+
+TELEGRAM_BOT_TOKEN=""
+TELEGRAM_CHAT_ID=""
+RCLONE_PASSWORD=""
+RCLONE_API_KEY=""
+GIT_PAT_TOKEN=""
+EOF
+    
+    chmod 600 "$SECRETS_DIR/.config.txt"
+    
+    # Zaszyfruj plik przy użyciu openssl
+    openssl enc -aes-256-cbc -salt -in "$SECRETS_DIR/.config.txt" \
+        -out "$SECRETS_FILE" -k "$master_password" -p 2>/dev/null
+    
+    if [ $? -eq 0 ]; then
+        # Zapisz SHA256 hasła dla weryfikacji
+        echo -n "$master_password" | sha256sum | cut -d' ' -f1 > "$SECRETS_HASH_FILE"
+        chmod 600 "$SECRETS_HASH_FILE"
+        
+        rm -f "$SECRETS_DIR/.config.txt"
+        chmod 600 "$SECRETS_FILE"
+        
+        log "✅ Plik sekretów zaszyfrowany i zapisany w: $SECRETS_FILE"
+        log "WAŻNE: Zapamiętaj hasło! Będzie wymagane do uruchamiania workflow."
+        return 0
+    else
+        error "Błąd przy szyfrowaniu pliku!"
+        return 1
+    fi
+}
+
+# Weryfikacja hasła
+verify_master_password() {
+    local password="$1"
+    
+    if [ ! -f "$SECRETS_HASH_FILE" ]; then
+        return 1
+    fi
+    
+    local stored_hash=$(cat "$SECRETS_HASH_FILE")
+    local provided_hash=$(echo -n "$password" | sha256sum | cut -d' ' -f1)
+    
+    if [ "$stored_hash" = "$provided_hash" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Odszyfruj secrets i załaduj do zmiennych środowiskowych
+load_secrets() {
+    if [ ! -f "$SECRETS_FILE" ]; then
+        return 0  # Brak szyfowanych sekretów, kontynuuj
+    fi
+    
+    log "Wprowadzenie głównego hasła wymagane..."
+    read -sp "Wpisz główne hasło: " master_password
+    echo ""
+    
+    # Weryfikuj hasło
+    if ! verify_master_password "$master_password"; then
+        error "❌ Błędne hasło!"
+        return 1
+    fi
+    
+    # Odszyfruj plik
+    local decrypted_content=$(openssl enc -aes-256-cbc -d -in "$SECRETS_FILE" \
+        -k "$master_password" 2>/dev/null)
+    
+    if [ $? -ne 0 ]; then
+        error "Błąd przy odszyfrowaniu sekretów!"
+        return 1
+    fi
+    
+    # Załaduj zmienne ze zdeszyfryowanego pliku
+    eval "$decrypted_content"
+    
+    log "✅ Tajemnice załadowane"
+    return 0
+}
+
+# Edytuj szyfrowane sekrety
+edit_secrets() {
+    if [ ! -f "$SECRETS_FILE" ]; then
+        error "Plik sekretów nie istnieje! Uruchom: ./workflow.sh setup"
+        return 1
+    fi
+    
+    read -sp "Wpisz główne hasło do edycji: " master_password
+    echo ""
+    
+    if ! verify_master_password "$master_password"; then
+        error "❌ Błędne hasło!"
+        return 1
+    fi
+    
+    # Odszyfruj do tymczasowego pliku
+    local temp_file=$(mktemp)
+    openssl enc -aes-256-cbc -d -in "$SECRETS_FILE" \
+        -k "$master_password" -out "$temp_file" 2>/dev/null
+    
+    if [ $? -ne 0 ]; then
+        error "Błąd przy odszyfrowaniu!"
+        rm -f "$temp_file"
+        return 1
+    fi
+    
+    # Otwórz edytor
+    ${EDITOR:-nano} "$temp_file"
+    
+    # Zaszyfruj z powrotem
+    openssl enc -aes-256-cbc -salt -in "$temp_file" \
+        -out "$SECRETS_FILE" -k "$master_password" -p 2>/dev/null
+    
+    rm -f "$temp_file"
+    log "✅ Sekrety zaktualizowane"
 }
 
 # Konfiguracja Telegram
 setup_telegram() {
-    log "=== Konfiguracja powiadomień Telegram ==="
+    log "=== Konfiguracja powiadomień Telegram (Szyfrowana) ==="
     
-    if [ -f "$CONFIG_FILE" ]; then
-        log "Znaleziono istniejącą konfigurację"
-        source "$CONFIG_FILE"
-        
-        if [ -n "$TELEGRAM_BOT_TOKEN" ]; then
-            echo ""
-            read -p "Zmienić istniejącą konfigurację? (t/N): " -n 1 -r
-            echo ""
-            if [[ ! $REPLY =~ ^[Tt]$ ]]; then
-                return
-            fi
+    # Sprawdź czy już mamy w szyfrowanym pliku
+    if [ -f "$SECRETS_FILE" ]; then
+        read -p "Zmienić istniejące dane Telegram? (t/N): " -n 1 -r
+        echo ""
+        if [[ ! $REPLY =~ ^[Tt]$ ]]; then
+            return 0
         fi
     fi
     
@@ -223,16 +411,47 @@ setup_telegram() {
     read -p "Telegram Bot Token: " bot_token
     read -p "Telegram Chat ID: " chat_id
     
-    # Zapisz konfigurację
-    cat > "$CONFIG_FILE" << EOF
-# Konfiguracja Telegram
-TELEGRAM_BOT_TOKEN="$bot_token"
-TELEGRAM_CHAT_ID="$chat_id"
-EOF
+    # Pobierz hasło jeśli to edycja, inaczej init_secrets go ustawi
+    if [ ! -f "$SECRETS_FILE" ]; then
+        init_secrets
+        if [ $? -ne 0 ]; then
+            error "Nie mogę inicjalizować sekretów"
+            return 1
+        fi
+    fi
     
-    chmod 600 "$CONFIG_FILE"
+    # Odszyfrujem, edytuję, reszyfrowanie
+    read -sp "Wpisz główne hasło do aktualizacji danych: " master_password
+    echo ""
     
-    # Test powiadomienia
+    if ! verify_master_password "$master_password"; then
+        error "❌ Błędne hasło!"
+        return 1
+    fi
+    
+    # Odszyfruj
+    local temp_file=$(mktemp)
+    openssl enc -aes-256-cbc -d -in "$SECRETS_FILE" \
+        -k "$master_password" -out "$temp_file" 2>/dev/null
+    
+    if [ $? -ne 0 ]; then
+        error "Błąd przy odszyfrowaniu!"
+        rm -f "$temp_file"
+        return 1
+    fi
+    
+    # Aktualizuj dane
+    sed -i "s/^TELEGRAM_BOT_TOKEN=.*/TELEGRAM_BOT_TOKEN=\"$bot_token\"/" "$temp_file"
+    sed -i "s/^TELEGRAM_CHAT_ID=.*/TELEGRAM_CHAT_ID=\"$chat_id\"/" "$temp_file"
+    
+    # Reszyfruj
+    openssl enc -aes-256-cbc -salt -in "$temp_file" \
+        -out "$SECRETS_FILE" -k "$master_password" -p 2>/dev/null
+    
+    rm -f "$temp_file"
+    chmod 600 "$SECRETS_FILE"
+    
+    # Załaduj nowe wartości
     TELEGRAM_BOT_TOKEN="$bot_token"
     TELEGRAM_CHAT_ID="$chat_id"
     
@@ -250,6 +469,95 @@ EOF
     fi
 }
 
+# Konfiguracja Git
+setup_git_config() {
+    log "=== Konfiguracja Git ==="
+    
+    # Sprawdzenie czy git jest zainstalowany
+    if ! command -v git &> /dev/null; then
+        warn "Git nie zainstalowany - pomijam konfigurację"
+        return 1
+    fi
+    
+    # Sprawdzenie czy już skonfigurowano
+    if git config --global user.name > /dev/null 2>&1; then
+        local current_user=$(git config --global user.name)
+        echo ""
+        echo "Git już skonfigurowany dla: $current_user"
+        read -p "Zmienić konfigurację? (t/N): " -n 1 -r
+        echo ""
+        if [[ ! $REPLY =~ ^[Tt]$ ]]; then
+            return 0
+        fi
+    fi
+    
+    echo ""
+    echo "Konfiguracja Git dla automatycznych pull/push"
+    echo ""
+    
+    # Username
+    read -p "Git username (np. MatuszG): " git_user
+    if [ -z "$git_user" ]; then
+        warn "Brak username - pomijam konfigurację"
+        return 1
+    fi
+    
+    # Email
+    read -p "Git email (np. user@example.com): " git_email
+    if [ -z "$git_email" ]; then
+        warn "Brak email - pomijam konfigurację"
+        return 1
+    fi
+    
+    # Token/Password method
+    echo ""
+    echo "Metoda autentykacji:"
+    echo "1) GitHub Personal Access Token (PAT) - rekomendowane"
+    echo "2) GitHub Password (deprecated)"
+    echo "3) SSH key (konfiguracja ręczna)"
+    read -p "Wybierz metodę (1/2/3): " auth_method
+    
+    case "$auth_method" in
+        1)
+            log "Konfiguracja GitHub PAT..."
+            read -p "GitHub Personal Access Token: " git_token
+            if [ -z "$git_token" ]; then
+                warn "Brak tokenu - pomijam"
+                return 1
+            fi
+            # Ustaw credential helper
+            git config --global credential.helper store
+            # Zapisz token (format: https://token@github.com)
+            echo "https://${git_token}@github.com" > ~/.git-credentials
+            chmod 600 ~/.git-credentials
+            log "✅ PAT token skonfigurowany"
+            ;;
+        2)
+            log "Konfiguracja hasła (deprecated)..."
+            git config --global credential.helper cache
+            git config --global credential.helper 'cache --timeout=86400'  # 24h cache
+            log "✅ Cache hasła na 24h skonfigurowany"
+            ;;
+        3)
+            log "SSH key - konfiguracja ręczna"
+            log "Dla SSH: ssh-keygen -t ed25519 -C '$git_email'"
+            ;;
+    esac
+    
+    # Ustaw użytkownika globalnie
+    git config --global user.name "$git_user"
+    git config --global user.email "$git_email"
+    
+    # Dodatkowe ustawienia
+    git config --global pull.rebase false  # Merge zamiast rebase
+    git config --global core.autocrlf input # LF na Linux/Mac
+    
+    log "✅ Git skonfigurowany:"
+    log "   User: $git_user"
+    log "   Email: $git_email"
+    log "   Auth: $([ "$auth_method" = "1" ] && echo "PAT Token" || echo "Cache Password")"
+}
+
 # Główna funkcja workflow
 run_workflow() {
     local run_count=0
@@ -258,6 +566,14 @@ run_workflow() {
     
     log "=== Workflow 24/7 uruchomiony (PID: $$) ==="
     echo $$ > "$PID_FILE"
+    
+    # Załaduj sekrety na starcie jeśli istnieją
+    if [ -f "$SECRETS_FILE" ]; then
+        log "Ładowanie szyfrowanych sekretów..."
+        if ! load_secrets; then
+            warn "Nie mogę załadować sekretów - kontynuuję bez nich"
+        fi
+    fi
     
     # Powiadomienie o starcie
     send_telegram "🚀 Workflow uruchomiony
@@ -780,6 +1096,18 @@ Status: ✅ Działa poprawnie"
         fi
         ;;
     
+    secrets-init)
+        init_secrets
+        ;;
+    
+    secrets-edit)
+        edit_secrets
+        ;;
+    
+    secrets-load)
+        load_secrets
+        ;;
+    
     *)
         echo "Termux 24/7 Auto-Restart Workflow"
         echo "=================================="
@@ -802,6 +1130,11 @@ Status: ✅ Działa poprawnie"
         echo "  telegram-test   - Test powiadomienia"
         echo "  telegram-config - Konfiguracja Telegram"
         echo "  send-logs       - Wyślij logi na Telegram"
+        echo ""
+        echo "Encrypted Secrets Management:"
+        echo "  secrets-init    - Inicjalizuj szyfrowany plik sekretów"
+        echo "  secrets-edit    - Edytuj szyfrowane sekrety"
+        echo "  secrets-load    - Załaduj sekrety do zmiennych"
         echo ""
         ;;
 esac
