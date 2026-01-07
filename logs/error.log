@@ -1,2 +1,6 @@
 [0;31m[2025-11-28 14:13:56] ERROR:[0m ✗ Nie udało się wysłać powiadomienia - sprawdź dane
 [0;31m[2025-11-28 14:14:06] ERROR:[0m ✗ Nie udało się wysłać powiadomienia - sprawdź dane
+[0;31m[2026-01-07 01:11:56] ERROR:[0m Pipeline aborted - thermal check failed
+[0;31m[2026-01-07 01:11:56] ERROR:[0m Pipeline execution #0 failed (error count: 36)
+[0;31m[2026-01-07 01:12:57] ERROR:[0m Pipeline aborted - thermal check failed
+[0;31m[2026-01-07 01:12:57] ERROR:[0m Pipeline execution #0 failed (error count: 37)

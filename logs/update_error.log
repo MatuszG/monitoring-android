@@ -1,0 +1,217 @@
+[0;31m[2026-01-07 00:07:35.879] ERROR [update.sh:282 in retry_command()]:
+  Message: Próba 1 FAILED: Git fetch
+  Exit Code: 124
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+  Call Stack:
+282 retry_command ./update.sh
+462 main_update ./update.sh
+528 main ./update.sh
+
+[0;31m[2026-01-07 00:07:36.077] ERROR [update.sh:283 in retry_command()]:
+  Message:   Czas wykonania: 30s
+  Exit Code: 0
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+  Call Stack:
+283 retry_command ./update.sh
+462 main_update ./update.sh
+528 main ./update.sh
+
+[0;31m[2026-01-07 00:08:11.414] ERROR [update.sh:282 in retry_command()]:
+  Message: Próba 2 FAILED: Git fetch
+  Exit Code: 124
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+  Call Stack:
+282 retry_command ./update.sh
+462 main_update ./update.sh
+528 main ./update.sh
+
+[0;31m[2026-01-07 00:08:11.587] ERROR [update.sh:283 in retry_command()]:
+  Message:   Czas wykonania: 30s
+  Exit Code: 0
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+  Call Stack:
+283 retry_command ./update.sh
+462 main_update ./update.sh
+528 main ./update.sh
+
+[0;31m[2026-01-07 00:08:46.855] ERROR [update.sh:282 in retry_command()]:
+  Message: Próba 3 FAILED: Git fetch
+  Exit Code: 124
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+  Call Stack:
+282 retry_command ./update.sh
+462 main_update ./update.sh
+528 main ./update.sh
+
+[0;31m[2026-01-07 00:08:47.053] ERROR [update.sh:283 in retry_command()]:
+  Message:   Czas wykonania: 30s
+  Exit Code: 0
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+  Call Stack:
+283 retry_command ./update.sh
+462 main_update ./update.sh
+528 main ./update.sh
+
+[0;31m[2026-01-07 00:08:47.240] ERROR [update.sh:298 in retry_command()]:
+  Message: Wszystkie 3 próby wyczerpane: Git fetch
+  Exit Code: 0
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+  Call Stack:
+298 retry_command ./update.sh
+462 main_update ./update.sh
+528 main ./update.sh
+
+[0;31m[2026-01-07 00:08:47.413] ERROR [update.sh:496 in main_update()]:
+  Message: Git fetch failed po retry
+  Exit Code: 0
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+  Call Stack:
+496 main_update ./update.sh
+528 main ./update.sh
+
+[0;31m[2026-01-07 00:08:47.579] ERROR [update.sh:497 in main_update()]:
+  Message: Możliwe przyczyny:
+  Exit Code: 0
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+  Call Stack:
+497 main_update ./update.sh
+528 main ./update.sh
+
+[0;31m[2026-01-07 00:08:47.753] ERROR [update.sh:498 in main_update()]:
+  Message:   - Brak połączenia internetowego
+  Exit Code: 0
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+  Call Stack:
+498 main_update ./update.sh
+528 main ./update.sh
+
+[0;31m[2026-01-07 00:08:47.919] ERROR [update.sh:499 in main_update()]:
+  Message:   - Problem z DNS
+  Exit Code: 0
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+  Call Stack:
+499 main_update ./update.sh
+528 main ./update.sh
+
+[0;31m[2026-01-07 00:08:48.087] ERROR [update.sh:500 in main_update()]:
+  Message:   - Timeout (>30s)
+  Exit Code: 0
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+  Call Stack:
+500 main_update ./update.sh
+528 main ./update.sh
+
+[0;31m[2026-01-07 00:08:48.256] ERROR [update.sh:501 in main_update()]:
+  Message:   - Remote repo niedostępne
+  Exit Code: 0
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+  Call Stack:
+501 main_update ./update.sh
+528 main ./update.sh
+
+[0;31m[2026-01-07 00:08:48.508] ERROR [update.sh:542 in trap_error()]:
+  Message: Nieoczekiwany błąd w linii 542
+  Exit Code: 1
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+  Call Stack:
+542 trap_error ./update.sh
+542 main ./update.sh
+
+[0;31m[2026-01-07 00:08:48.710] ERROR [update.sh:544 in trap_error()]:
+  Message: Nieoczekiwany błąd w linii 544
+  Exit Code: 1
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+  Call Stack:
+544 trap_error ./update.sh
+544 main ./update.sh
+
+[0;31m[2026-01-07 00:13:30.766] ERROR [update.sh:542 in trap_error()]:
+  Message: Nieoczekiwany błąd w linii 542
+  Exit Code: 1
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 17622[0m
+  Call Stack:
+542 trap_error ./update.sh
+542 main ./update.sh
+
+[0;31m[2026-01-07 00:13:30.971] ERROR [update.sh:544 in trap_error()]:
+  Message: Nieoczekiwany błąd w linii 544
+  Exit Code: 1
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 17622[0m
+  Call Stack:
+544 trap_error ./update.sh
+544 main ./update.sh
+
+[0;31m[2026-01-07 00:13:52.505] ERROR [update.sh:542 in trap_error()]:
+  Message: Nieoczekiwany błąd w linii 542
+  Exit Code: 1
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 18047[0m
+  Call Stack:
+542 trap_error ./update.sh
+542 main ./update.sh
+
+[0;31m[2026-01-07 00:13:52.701] ERROR [update.sh:544 in trap_error()]:
+  Message: Nieoczekiwany błąd w linii 544
+  Exit Code: 1
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 18047[0m
+  Call Stack:
+544 trap_error ./update.sh
+544 main ./update.sh
+
+[0;31m[2026-01-07 00:14:38.710] ERROR [update.sh:542 in trap_error()]:
+  Message: Nieoczekiwany błąd w linii 542
+  Exit Code: 1
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 19702[0m
+  Call Stack:
+542 trap_error ./update.sh
+542 main ./update.sh
+
+[0;31m[2026-01-07 00:14:38.908] ERROR [update.sh:544 in trap_error()]:
+  Message: Nieoczekiwany błąd w linii 544
+  Exit Code: 1
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 19702[0m
+  Call Stack:
+544 trap_error ./update.sh
+544 main ./update.sh
+

@@ -1,0 +1,269 @@
+[2026-01-07 00:06:36] === AKTUALIZACJA WORKFLOW ===
+[0;32m[2026-01-07 00:06:36][0m Katalog workflow: /data/data/com.termux/files/home/monitoring-android
+[0;32m[2026-01-07 00:06:36][0m Start: 2026-01-07 00:06:36
+[2026-01-07 00:06:36] === TWORZENIE BACKUPU ===
+[0;32m[2026-01-07 00:06:36][0m Backup: backup_20260107_000636
+[0;32m[2026-01-07 00:06:37][0m ✅ workflow.sh → backup
+[0;32m[2026-01-07 00:06:37][0m ✅ sorter-common → backup (tar.gz)
+[0;32m[2026-01-07 00:06:37][0m ✅ Git commit hash → backup
+[0;32m[2026-01-07 00:06:37][0m ✅ Backup utworzony: /data/data/com.termux/files/home/monitoring-android/backups/backup_20260107_000636
+[0;32m[2026-01-07 00:06:37][0m Czyszczenie starych backupów (>7 dni)...
+[2026-01-07 00:06:37] === SPRAWDZENIE WYMAGANYCH NARZĘDZI ===
+[0;32m[2026-01-07 00:06:37][0m ✅ git zainstalowany: /data/data/com.termux/files/usr/bin/git
+[1;33m[2026-01-07 00:06:37] WARN:[0m ❌ python nie znaleziony w PATH
+[0;32m[2026-01-07 00:06:37][0m Próba 1/2: Instalacja python
+[0;32m[2026-01-07 00:07:03][0m ✅ Sukces: Instalacja python (czas: 26s)
+[0;32m[2026-01-07 00:07:03][0m ✅ python zainstalowany
+[0;32m[2026-01-07 00:07:03][0m ✅ pip zainstalowany: /data/data/com.termux/files/usr/bin/pip
+[1;33m[2026-01-07 00:07:04] WARN:[0m ❌ jq nie znaleziony w PATH
+[0;32m[2026-01-07 00:07:04][0m Próba 1/2: Instalacja jq
+[0;32m[2026-01-07 00:07:05][0m ✅ Sukces: Instalacja jq (czas: 1s)
+[0;32m[2026-01-07 00:07:05][0m ✅ jq zainstalowany
+[0;32m[2026-01-07 00:07:05][0m ✅ curl zainstalowany: /data/data/com.termux/files/usr/bin/curl
+[2026-01-07 00:07:05] === SPRAWDZENIE STATUSU ===
+[2026-01-07 00:07:05] === AKTUALIZACJA WORKFLOW.SH (GIT PULL) ===
+[0;32m[2026-01-07 00:07:05][0m Aktualizuję workflow z git...
+[1;33m[2026-01-07 00:07:05] WARN:[0m Wykryto niezapisane zmiany w repo!
+[0;32m[2026-01-07 00:07:05][0m Próba 1/3: Git fetch
+[0;31m[2026-01-07 00:07:35.879] ERROR [update.sh:282 in retry_command()]:
+  Message: Próba 1 FAILED: Git fetch
+  Exit Code: 124
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+[0;31m[2026-01-07 00:07:36.077] ERROR [update.sh:283 in retry_command()]:
+  Message:   Czas wykonania: 30s
+  Exit Code: 0
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+[1;33m[2026-01-07 00:07:36] WARN:[0m Retry za 5s... (pozostało prób: 2)
+[0;32m[2026-01-07 00:07:41][0m Próba 2/3: Git fetch
+[0;31m[2026-01-07 00:08:11.414] ERROR [update.sh:282 in retry_command()]:
+  Message: Próba 2 FAILED: Git fetch
+  Exit Code: 124
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+[0;31m[2026-01-07 00:08:11.587] ERROR [update.sh:283 in retry_command()]:
+  Message:   Czas wykonania: 30s
+  Exit Code: 0
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+[1;33m[2026-01-07 00:08:11] WARN:[0m Retry za 5s... (pozostało prób: 1)
+[0;32m[2026-01-07 00:08:16][0m Próba 3/3: Git fetch
+[0;31m[2026-01-07 00:08:46.855] ERROR [update.sh:282 in retry_command()]:
+  Message: Próba 3 FAILED: Git fetch
+  Exit Code: 124
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+[0;31m[2026-01-07 00:08:47.053] ERROR [update.sh:283 in retry_command()]:
+  Message:   Czas wykonania: 30s
+  Exit Code: 0
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+[0;31m[2026-01-07 00:08:47.240] ERROR [update.sh:298 in retry_command()]:
+  Message: Wszystkie 3 próby wyczerpane: Git fetch
+  Exit Code: 0
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+[0;31m[2026-01-07 00:08:47.413] ERROR [update.sh:496 in main_update()]:
+  Message: Git fetch failed po retry
+  Exit Code: 0
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+[0;31m[2026-01-07 00:08:47.579] ERROR [update.sh:497 in main_update()]:
+  Message: Możliwe przyczyny:
+  Exit Code: 0
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+[0;31m[2026-01-07 00:08:47.753] ERROR [update.sh:498 in main_update()]:
+  Message:   - Brak połączenia internetowego
+  Exit Code: 0
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+[0;31m[2026-01-07 00:08:47.919] ERROR [update.sh:499 in main_update()]:
+  Message:   - Problem z DNS
+  Exit Code: 0
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+[0;31m[2026-01-07 00:08:48.087] ERROR [update.sh:500 in main_update()]:
+  Message:   - Timeout (>30s)
+  Exit Code: 0
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+[0;31m[2026-01-07 00:08:48.256] ERROR [update.sh:501 in main_update()]:
+  Message:   - Remote repo niedostępne
+  Exit Code: 0
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+[0;32m[2026-01-07 00:08:48][0m 📋 Podsumowanie:
+[0;32m[2026-01-07 00:08:48][0m   - ✅ Backup utworzony
+[0;32m[2026-01-07 00:08:48][0m   - ✅ Kod zaktualizowany
+[0;31m[2026-01-07 00:08:48.508] ERROR [update.sh:542 in trap_error()]:
+  Message: Nieoczekiwany błąd w linii 542
+  Exit Code: 1
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+[0;31m[2026-01-07 00:08:48.710] ERROR [update.sh:544 in trap_error()]:
+  Message: Nieoczekiwany błąd w linii 544
+  Exit Code: 1
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 13585[0m
+[2026-01-07 00:13:27] === AKTUALIZACJA WORKFLOW ===
+[0;32m[2026-01-07 00:13:27][0m Katalog workflow: /data/data/com.termux/files/home/monitoring-android
+[0;32m[2026-01-07 00:13:27][0m Start: 2026-01-07 00:13:27
+[2026-01-07 00:13:27] === TWORZENIE BACKUPU ===
+[0;32m[2026-01-07 00:13:27][0m Backup: backup_20260107_001327
+[0;32m[2026-01-07 00:13:27][0m ✅ workflow.sh → backup
+[0;32m[2026-01-07 00:13:27][0m ✅ sorter-common → backup (tar.gz)
+[0;32m[2026-01-07 00:13:27][0m ✅ Git commit hash → backup
+[0;32m[2026-01-07 00:13:28][0m ✅ Python packages → backup
+[0;32m[2026-01-07 00:13:28][0m ✅ Backup utworzony: /data/data/com.termux/files/home/monitoring-android/backups/backup_20260107_001327
+[0;32m[2026-01-07 00:13:28][0m Czyszczenie starych backupów (>7 dni)...
+[2026-01-07 00:13:28] === SPRAWDZENIE WYMAGANYCH NARZĘDZI ===
+[0;32m[2026-01-07 00:13:28][0m ✅ git zainstalowany: /data/data/com.termux/files/usr/bin/git
+[0;32m[2026-01-07 00:13:28][0m ✅ python zainstalowany: /data/data/com.termux/files/usr/bin/python
+[0;32m[2026-01-07 00:13:28][0m ✅ pip zainstalowany: /data/data/com.termux/files/usr/bin/pip
+[0;32m[2026-01-07 00:13:29][0m ✅ jq zainstalowany: /data/data/com.termux/files/usr/bin/jq
+[0;32m[2026-01-07 00:13:29][0m ✅ curl zainstalowany: /data/data/com.termux/files/usr/bin/curl
+[2026-01-07 00:13:29] === SPRAWDZENIE STATUSU ===
+[2026-01-07 00:13:29] === AKTUALIZACJA WORKFLOW.SH (GIT PULL) ===
+[0;32m[2026-01-07 00:13:29][0m Aktualizuję workflow z git...
+[1;33m[2026-01-07 00:13:30] WARN:[0m Wykryto niezapisane zmiany w repo!
+[0;32m[2026-01-07 00:13:30][0m Próba 1/3: Git fetch
+[0;32m[2026-01-07 00:13:30][0m ✅ Sukces: Git fetch (czas: 0s)
+[0;32m[2026-01-07 00:13:30][0m ℹ️ Kod jest aktualny (brak zmian)
+[0;32m[2026-01-07 00:13:30][0m 📋 Podsumowanie:
+[0;32m[2026-01-07 00:13:30][0m   - ✅ Backup utworzony
+[0;32m[2026-01-07 00:13:30][0m   - ✅ Kod zaktualizowany
+[0;31m[2026-01-07 00:13:30.766] ERROR [update.sh:542 in trap_error()]:
+  Message: Nieoczekiwany błąd w linii 542
+  Exit Code: 1
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 17622[0m
+[0;31m[2026-01-07 00:13:30.971] ERROR [update.sh:544 in trap_error()]:
+  Message: Nieoczekiwany błąd w linii 544
+  Exit Code: 1
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 17622[0m
+[2026-01-07 00:13:49] === AKTUALIZACJA WORKFLOW ===
+[0;32m[2026-01-07 00:13:49][0m Katalog workflow: /data/data/com.termux/files/home/monitoring-android
+[0;32m[2026-01-07 00:13:49][0m Start: 2026-01-07 00:13:49
+[2026-01-07 00:13:49] === TWORZENIE BACKUPU ===
+[0;32m[2026-01-07 00:13:49][0m Backup: backup_20260107_001349
+[0;32m[2026-01-07 00:13:49][0m ✅ workflow.sh → backup
+[0;32m[2026-01-07 00:13:49][0m ✅ sorter-common → backup (tar.gz)
+[0;32m[2026-01-07 00:13:49][0m ✅ Git commit hash → backup
+[0;32m[2026-01-07 00:13:50][0m ✅ Python packages → backup
+[0;32m[2026-01-07 00:13:50][0m ✅ Backup utworzony: /data/data/com.termux/files/home/monitoring-android/backups/backup_20260107_001349
+[0;32m[2026-01-07 00:13:50][0m Czyszczenie starych backupów (>7 dni)...
+[2026-01-07 00:13:50] === SPRAWDZENIE WYMAGANYCH NARZĘDZI ===
+[0;32m[2026-01-07 00:13:50][0m ✅ git zainstalowany: /data/data/com.termux/files/usr/bin/git
+[0;32m[2026-01-07 00:13:50][0m ✅ python zainstalowany: /data/data/com.termux/files/usr/bin/python
+[0;32m[2026-01-07 00:13:50][0m ✅ pip zainstalowany: /data/data/com.termux/files/usr/bin/pip
+[0;32m[2026-01-07 00:13:51][0m ✅ jq zainstalowany: /data/data/com.termux/files/usr/bin/jq
+[0;32m[2026-01-07 00:13:51][0m ✅ curl zainstalowany: /data/data/com.termux/files/usr/bin/curl
+[2026-01-07 00:13:51] === SPRAWDZENIE STATUSU ===
+[2026-01-07 00:13:51] === AKTUALIZACJA WORKFLOW.SH (GIT PULL) ===
+[0;32m[2026-01-07 00:13:51][0m Aktualizuję workflow z git...
+[1;33m[2026-01-07 00:13:51] WARN:[0m Wykryto niezapisane zmiany w repo!
+[0;32m[2026-01-07 00:13:51][0m Próba 1/3: Git fetch
+[0;32m[2026-01-07 00:13:52][0m ✅ Sukces: Git fetch (czas: 1s)
+[0;32m[2026-01-07 00:13:52][0m ℹ️ Kod jest aktualny (brak zmian)
+[0;32m[2026-01-07 00:13:52][0m 📋 Podsumowanie:
+[0;32m[2026-01-07 00:13:52][0m   - ✅ Backup utworzony
+[0;32m[2026-01-07 00:13:52][0m   - ✅ Kod zaktualizowany
+[0;31m[2026-01-07 00:13:52.505] ERROR [update.sh:542 in trap_error()]:
+  Message: Nieoczekiwany błąd w linii 542
+  Exit Code: 1
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 18047[0m
+[0;31m[2026-01-07 00:13:52.701] ERROR [update.sh:544 in trap_error()]:
+  Message: Nieoczekiwany błąd w linii 544
+  Exit Code: 1
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 18047[0m
+[2026-01-07 00:14:35] === AKTUALIZACJA WORKFLOW ===
+[0;32m[2026-01-07 00:14:35][0m Katalog workflow: /data/data/com.termux/files/home/monitoring-android
+[0;32m[2026-01-07 00:14:35][0m Start: 2026-01-07 00:14:35
+[2026-01-07 00:14:35] === TWORZENIE BACKUPU ===
+[0;32m[2026-01-07 00:14:35][0m Backup: backup_20260107_001435
+[0;32m[2026-01-07 00:14:35][0m ✅ workflow.sh → backup
+[0;32m[2026-01-07 00:14:35][0m ✅ sorter-common → backup (tar.gz)
+[0;32m[2026-01-07 00:14:35][0m ✅ Git commit hash → backup
+[0;32m[2026-01-07 00:14:36][0m ✅ Python packages → backup
+[0;32m[2026-01-07 00:14:36][0m ✅ Backup utworzony: /data/data/com.termux/files/home/monitoring-android/backups/backup_20260107_001435
+[0;32m[2026-01-07 00:14:36][0m Czyszczenie starych backupów (>7 dni)...
+[2026-01-07 00:14:36] === SPRAWDZENIE WYMAGANYCH NARZĘDZI ===
+[0;32m[2026-01-07 00:14:36][0m ✅ git zainstalowany: /data/data/com.termux/files/usr/bin/git
+[0;32m[2026-01-07 00:14:36][0m ✅ python zainstalowany: /data/data/com.termux/files/usr/bin/python
+[0;32m[2026-01-07 00:14:36][0m ✅ pip zainstalowany: /data/data/com.termux/files/usr/bin/pip
+[0;32m[2026-01-07 00:14:37][0m ✅ jq zainstalowany: /data/data/com.termux/files/usr/bin/jq
+[0;32m[2026-01-07 00:14:37][0m ✅ curl zainstalowany: /data/data/com.termux/files/usr/bin/curl
+[2026-01-07 00:14:37] === SPRAWDZENIE STATUSU ===
+[2026-01-07 00:14:37] === AKTUALIZACJA WORKFLOW.SH (GIT PULL) ===
+[0;32m[2026-01-07 00:14:37][0m Aktualizuję workflow z git...
+[1;33m[2026-01-07 00:14:37] WARN:[0m Wykryto niezapisane zmiany w repo!
+[0;32m[2026-01-07 00:14:37][0m Próba 1/3: Git fetch
+[0;32m[2026-01-07 00:14:38][0m ✅ Sukces: Git fetch (czas: 1s)
+[0;32m[2026-01-07 00:14:38][0m ℹ️ Kod jest aktualny (brak zmian)
+[0;32m[2026-01-07 00:14:38][0m 📋 Podsumowanie:
+[0;32m[2026-01-07 00:14:38][0m   - ✅ Backup utworzony
+[0;32m[2026-01-07 00:14:38][0m   - ✅ Kod zaktualizowany
+[0;31m[2026-01-07 00:14:38.710] ERROR [update.sh:542 in trap_error()]:
+  Message: Nieoczekiwany błąd w linii 542
+  Exit Code: 1
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 19702[0m
+[0;31m[2026-01-07 00:14:38.908] ERROR [update.sh:544 in trap_error()]:
+  Message: Nieoczekiwany błąd w linii 544
+  Exit Code: 1
+  PWD: /data/data/com.termux/files/home/monitoring-android
+  User: u0_a434
+  PID: 19702[0m
+[2026-01-07 00:16:59] === AKTUALIZACJA WORKFLOW ===
+[0;32m[2026-01-07 00:16:59][0m Katalog workflow: /data/data/com.termux/files/home/monitoring-android
+[0;32m[2026-01-07 00:16:59][0m Start: 2026-01-07 00:16:59
+[2026-01-07 00:17:00] === TWORZENIE BACKUPU ===
+[0;32m[2026-01-07 00:17:00][0m Backup: backup_20260107_001700
+[0;32m[2026-01-07 00:17:00][0m ✅ workflow.sh → backup
+[0;32m[2026-01-07 00:17:00][0m ✅ config.env → backup
+[0;32m[2026-01-07 00:17:00][0m ✅ sorter-common → backup (tar.gz)
+[0;32m[2026-01-07 00:17:00][0m ✅ Git commit hash → backup
+[0;32m[2026-01-07 00:17:01][0m ✅ Python packages → backup
+[0;32m[2026-01-07 00:17:01][0m ✅ Backup utworzony: /data/data/com.termux/files/home/monitoring-android/backups/backup_20260107_001700
+[0;32m[2026-01-07 00:17:01][0m Czyszczenie starych backupów (>7 dni)...
+[2026-01-07 00:17:01] === SPRAWDZENIE WYMAGANYCH NARZĘDZI ===
+[0;32m[2026-01-07 00:17:01][0m ✅ git zainstalowany: /data/data/com.termux/files/usr/bin/git
+[0;32m[2026-01-07 00:17:01][0m ✅ python zainstalowany: /data/data/com.termux/files/usr/bin/python
+[0;32m[2026-01-07 00:17:02][0m ✅ pip zainstalowany: /data/data/com.termux/files/usr/bin/pip
+[0;32m[2026-01-07 00:17:03][0m ✅ jq zainstalowany: /data/data/com.termux/files/usr/bin/jq
+[0;32m[2026-01-07 00:17:03][0m ✅ curl zainstalowany: /data/data/com.termux/files/usr/bin/curl
+[2026-01-07 00:17:03] === SPRAWDZENIE STATUSU ===
+[2026-01-07 00:17:03] === AKTUALIZACJA WORKFLOW.SH (GIT PULL) ===
+[0;32m[2026-01-07 00:17:03][0m Aktualizuję workflow z git...
+[1;33m[2026-01-07 00:17:03] WARN:[0m Wykryto niezapisane zmiany w repo!
+[0;32m[2026-01-07 00:17:03][0m Próba 1/3: Git fetch
+[0;32m[2026-01-07 00:17:04][0m ✅ Sukces: Git fetch (czas: 0s)
+[0;32m[2026-01-07 00:17:04][0m ℹ️ Kod jest aktualny (brak zmian)
+[0;32m[2026-01-07 00:17:07][0m 📋 Podsumowanie:
+[0;32m[2026-01-07 00:17:07][0m   - ✅ Backup utworzony
+[0;32m[2026-01-07 00:17:07][0m   - ✅ Kod zaktualizowany
