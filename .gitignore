@@ -1,3 +1,5 @@
 config.env
 github.txt
 ~/.secrets/
+settings.json
+workflow.pid
