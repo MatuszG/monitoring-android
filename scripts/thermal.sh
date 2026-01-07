@@ -713,13 +713,13 @@ case "${1:-help}" in
         ;;
     
     is-critical)
-        local temp=$(read_temperature)
+        temp="$(read_temperature)"
         is_temperature_critical "$temp"
         exit $?
         ;;
     
     is-hot)
-        local temp=$(read_temperature)
+        temp="$(read_temperature)"
         is_temperature_hot "$temp"
         exit $?
         ;;
