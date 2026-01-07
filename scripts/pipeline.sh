@@ -8,7 +8,7 @@ set -Eeuo pipefail
 
 # -------- CONFIG --------
 WORKFLOW_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-THERMAL_SCRIPT="${WORKFLOW_DIR}/scripts/thermal.sh"
+THERMAL_SCRIPT="${WORKFLOW_DIR}/thermal.sh"
 THERMAL_LOCK="${WORKFLOW_DIR}/thermal.lock"
 
 # -------- LOGGING --------
